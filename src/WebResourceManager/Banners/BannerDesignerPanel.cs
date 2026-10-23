@@ -518,20 +518,28 @@ namespace WebResourceManager.Banners
             html.Append("button:hover{border-color:#8a8886}button.selected{border-color:#0078d4;box-shadow:0 0 0 2px #c7e0f4}");
             html.AppendFormat("button svg{{color:{0}}}", BannerHtmlBuilder.ToHex(settings.IconColor));
             html.Append(".none{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:.6}");
-            html.Append("</style></head><body><div class=\"grid\">");
+            html.Append("h4{margin:8px 2px 4px;font-size:11px;font-weight:600;color:#605e5c;text-transform:uppercase;letter-spacing:.04em}h4:first-child{margin-top:0}");
+            html.Append("</style></head><body>");
 
-            foreach (var icon in BannerIcon.All)
+            // Grouped by category, in the order categories first appear in the list
+            foreach (var group in BannerIcon.All.GroupBy(i => i.Category))
             {
-                var selected = settings.Icon == icon || (settings.Icon == null && icon == BannerIcon.None);
-                html.AppendFormat("<button type=\"button\"{0} title=\"{1}\" onclick=\"window.chrome.webview.postMessage('{2}')\">",
-                    selected ? " class=\"selected\"" : string.Empty, WebUtility.HtmlEncode(icon.Label), icon.Key);
-                html.Append(string.IsNullOrEmpty(icon.Markup)
-                    ? "<span class=\"none\">&#8856;</span>"
-                    : BannerHtmlBuilder.BuildSvg(icon, settings.IconFilled, 28));
-                html.AppendFormat("<span>{0}</span></button>", WebUtility.HtmlEncode(icon == BannerIcon.None ? "None" : icon.Label));
+                html.AppendFormat("<h4>{0}</h4><div class=\"grid\">", WebUtility.HtmlEncode(group.Key));
+                foreach (var icon in group)
+                {
+                    var selected = settings.Icon == icon || (settings.Icon == null && icon == BannerIcon.None);
+                    html.AppendFormat("<button type=\"button\"{0} title=\"{1}\" onclick=\"window.chrome.webview.postMessage('{2}')\">",
+                        selected ? " class=\"selected\"" : string.Empty, WebUtility.HtmlEncode(icon.Label), icon.Key);
+                    html.Append(string.IsNullOrEmpty(icon.Markup)
+                        ? "<span class=\"none\">&#8856;</span>"
+                        : BannerHtmlBuilder.BuildSvg(icon, settings.IconFilled, 28));
+                    html.AppendFormat("<span>{0}</span></button>", WebUtility.HtmlEncode(icon == BannerIcon.None ? "None" : icon.Label));
+                }
+
+                html.Append("</div>");
             }
 
-            html.Append("</div></body></html>");
+            html.Append("</body></html>");
             return html.ToString();
         }
 

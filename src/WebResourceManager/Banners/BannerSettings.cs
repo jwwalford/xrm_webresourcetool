@@ -12,13 +12,13 @@ namespace WebResourceManager.Banners
     {
         public BannerSettings()
         {
-            // Defaults match the classic dark form banner: black bar, light blue icon, white text
+            // Defaults: black bar with a white outline icon and white text
             Text = "My Banner";
             BackgroundColor = Color.Black;
             TextColor = Color.White;
-            IconColor = Color.FromArgb(0x9D, 0xD9, 0xF3);
+            IconColor = Color.White;
             Icon = BannerIcon.All[1];
-            IconFilled = true;
+            IconFilled = false;
             FontSize = 22;
             Alignment = BannerAlignment.Left;
         }

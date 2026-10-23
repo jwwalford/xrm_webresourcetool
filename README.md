@@ -23,7 +23,7 @@ An XrmToolBox tool for working with Dataverse HTML, CSS and image web resources:
 - **Save to disk** and **Copy name** from the toolbar or right-click menu.
 - **Create a banner...** (Tools tab): a single-page designer for form banners (an HTML web resource with a coloured bar, an icon and a line of text), shown in the right panel.
   - **Web resource**: pick a solution (its publisher prefix is added to the name), then enter the name, display name and description.
-  - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour. Pick icons from the clickable gallery. A live preview updates as you change things.
+  - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour (white outline by default). Pick from 36 icons in the clickable gallery, grouped into General, Law, Accounting and Sales. A live preview updates as you change things.
   - **Save to Dataverse** creates the web resource (or replaces an existing HTML one after confirming), adds it to the chosen solution and publishes it.
   - **Export HTML...** saves the same HTML file to disk. This works without a connection.
   - The banner fills its frame, so set its height on the form with the web resource's row count, and turn off the label and border.
