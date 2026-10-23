@@ -106,7 +106,7 @@ namespace WebResourceManager.Models
     }
 
     /// <summary>
-    /// An entry in the type filter drop-down. A null Type means "all types".
+    /// An entry in the type filter drop-down. An empty Types array means "all types".
     /// </summary>
     public class WebResourceTypeFilter
     {
@@ -125,15 +125,30 @@ namespace WebResourceManager.Models
             return Label;
         }
 
+        /// <summary>
+        /// The explorer focuses on HTML, CSS and images, so only those types are offered.
+        /// </summary>
         public static IEnumerable<WebResourceTypeFilter> Defaults()
         {
-            yield return new WebResourceTypeFilter("All types");
-            yield return new WebResourceTypeFilter("All images (PNG, JPG, GIF, ICO, SVG)",
-                WebResourceType.Png, WebResourceType.Jpg, WebResourceType.Gif, WebResourceType.Ico, WebResourceType.Svg);
-            foreach (var type in WebResourceTypeInfo.All)
+            yield return new WebResourceTypeFilter("HTML, CSS and images", ExplorerTypes);
+            yield return new WebResourceTypeFilter(WebResourceTypeInfo.GetLabel(WebResourceType.Html), WebResourceType.Html);
+            yield return new WebResourceTypeFilter(WebResourceTypeInfo.GetLabel(WebResourceType.Css), WebResourceType.Css);
+            yield return new WebResourceTypeFilter("All images (PNG, JPG, GIF, ICO, SVG)", ImageTypes);
+            foreach (var type in ImageTypes)
             {
                 yield return new WebResourceTypeFilter(WebResourceTypeInfo.GetLabel(type), type);
             }
         }
+
+        private static readonly WebResourceType[] ImageTypes =
+        {
+            WebResourceType.Png, WebResourceType.Jpg, WebResourceType.Gif, WebResourceType.Ico, WebResourceType.Svg
+        };
+
+        private static readonly WebResourceType[] ExplorerTypes =
+        {
+            WebResourceType.Html, WebResourceType.Css,
+            WebResourceType.Png, WebResourceType.Jpg, WebResourceType.Gif, WebResourceType.Ico, WebResourceType.Svg
+        };
     }
 }

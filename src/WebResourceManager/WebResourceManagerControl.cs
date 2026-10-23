@@ -45,13 +45,13 @@ namespace WebResourceManager
             codeView = new Scintilla
             {
                 Dock = DockStyle.Fill,
-                Visible = false,
                 ReadOnly = true,
                 WrapMode = WrapMode.None,
                 BorderStyle = BorderStyle.None
             };
             codeView.Margins[0].Width = 40;
-            pnlPreview.Controls.Add(codeView);
+            scPreview.Panel2.Controls.Add(codeView);
+            scPreview.Panel2Collapsed = true;
 
             browser = new WebView2
             {
@@ -60,19 +60,17 @@ namespace WebResourceManager
             };
             pnlPreview.Controls.Add(browser);
 
-            var tsbNewBanner = new ToolStripButton
-            {
-                Name = "tsbNewBanner",
-                Text = "New banner...",
-                DisplayStyle = ToolStripItemDisplayStyle.Text,
-                ToolTipText = "Design a form banner and save it as an HTML web resource"
-            };
-            tsbNewBanner.Click += tsbNewBanner_Click;
-            tsMain.Items.Add(new ToolStripSeparator());
-            tsMain.Items.Add(tsbNewBanner);
+            toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
+            toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future HTML tool", null);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future HTML tool", null);
+            toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
         }
 
-        private void tsbNewBanner_Click(object sender, EventArgs e)
+        private void OpenBannerWizard()
         {
             // Not connected is fine: the wizard can still design and export to disk
             var dataFolder = Path.Combine(Path.GetTempPath(), "XrmToolBox.WebResourceManager", "WebView2");
@@ -82,6 +80,7 @@ namespace WebResourceManager
                 if (wizard.SavedName != null)
                 {
                     tsslCount.Text = "Saved " + wizard.SavedName + ". Load web resources to see it in the list.";
+                    tcLeft.SelectedTab = tpExplorer;
                 }
             }
         }
@@ -152,6 +151,7 @@ namespace WebResourceManager
 
         private void tsbLoad_Click(object sender, EventArgs e)
         {
+            tcLeft.SelectedTab = tpExplorer;
             ExecuteMethod(LoadWebResources);
         }
 
@@ -245,6 +245,11 @@ namespace WebResourceManager
 
         private void tstSearch_TextChanged(object sender, EventArgs e)
         {
+            if (tstSearch.Text.Length > 0)
+            {
+                tcLeft.SelectedTab = tpExplorer;
+            }
+
             PopulateList();
         }
 
@@ -335,10 +340,12 @@ namespace WebResourceManager
             lblDetails.Text = details;
         }
 
+        /// <summary>
+        /// Fills the live preview (top) and the code preview (bottom). Raster images
+        /// have no code, so the bottom pane is collapsed for them.
+        /// </summary>
         private void ShowPreview(WebResourceItem item)
         {
-            tsbViewSource.Visible = item.PreviewKind == PreviewKind.Browser;
-
             if (string.IsNullOrEmpty(item.Content))
             {
                 ShowNoPreview("This web resource has no content.");
@@ -347,26 +354,27 @@ namespace WebResourceManager
 
             try
             {
-                switch (item.PreviewKind)
+                switch (item.Type)
                 {
-                    case PreviewKind.Image:
+                    case WebResourceType.Png:
+                    case WebResourceType.Jpg:
+                    case WebResourceType.Gif:
+                    case WebResourceType.Ico:
                         ShowImage(item);
+                        ShowCode(null);
                         break;
-                    case PreviewKind.Browser:
-                        if (tsbViewSource.Checked)
-                        {
-                            ShowCode(item);
-                        }
-                        else
-                        {
-                            ShowBrowser(item);
-                        }
-                        break;
-                    case PreviewKind.Text:
+                    case WebResourceType.Html:
+                    case WebResourceType.Svg:
+                    case WebResourceType.Css:
+                        ShowBrowser(item);
                         ShowCode(item);
                         break;
                     default:
-                        ShowNoPreview(item.TypeLabel + " web resources can't be previewed. Use Save to disk to inspect it.");
+                        // Fallback: the explorer only lists HTML, CSS and images
+                        ShowNoPreviewMessage(item.PreviewKind == PreviewKind.Text
+                            ? "No live preview for " + item.TypeLabel + "."
+                            : item.TypeLabel + " web resources can't be previewed. Use Save to disk to inspect it.");
+                        ShowCode(item.PreviewKind == PreviewKind.Text ? item : null);
                         break;
                 }
             }
@@ -405,7 +413,7 @@ namespace WebResourceManager
 
             lblDetails.Text += string.Format("  |  {0} x {1} px, {2:N1} KB", image.Width, image.Height, bytes.Length / 1024.0);
             UpdateImageSizeMode();
-            ShowOnly(pbImage);
+            ShowLive(pbImage);
         }
 
         private void pbImage_Resize(object sender, EventArgs e)
@@ -430,11 +438,21 @@ namespace WebResourceManager
         private void ShowBrowser(WebResourceItem item)
         {
             var text = WebResourceRepository.DecodeText(item.Content);
-            var html = item.Type == WebResourceType.Svg
-                ? "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>html,body{margin:0;height:100%;display:flex;align-items:center;justify-content:center;background:#fff}svg{max-width:100%;max-height:100%}</style></head><body>" + text + "</body></html>"
-                : text;
+            string html;
+            switch (item.Type)
+            {
+                case WebResourceType.Svg:
+                    html = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>html,body{margin:0;height:100%;display:flex;align-items:center;justify-content:center;background:#fff}svg{max-width:100%;max-height:100%}</style></head><body>" + text + "</body></html>";
+                    break;
+                case WebResourceType.Css:
+                    html = CssSamplePage.Build(text);
+                    break;
+                default:
+                    html = text;
+                    break;
+            }
 
-            ShowOnly(browser);
+            ShowLive(browser);
 
             if (!browserReady)
             {
@@ -466,22 +484,21 @@ namespace WebResourceManager
             }
 
             browser.CoreWebView2.Settings.IsScriptEnabled = tsmiRunScripts.Checked;
-            if (current != null && current.PreviewKind == PreviewKind.Browser && !tsbViewSource.Checked)
+            if (current != null && current.Content != null && browser.Visible)
             {
                 ShowPreview(current);
             }
         }
 
-        private void tsbViewSource_CheckedChanged(object sender, EventArgs e)
-        {
-            if (current != null && current.Content != null)
-            {
-                ShowPreview(current);
-            }
-        }
-
+        /// <param name="item">Null collapses the code pane.</param>
         private void ShowCode(WebResourceItem item)
         {
+            scPreview.Panel2Collapsed = item == null;
+            if (item == null)
+            {
+                return;
+            }
+
             CodeStyler.Apply(codeView, item.Type);
 
             codeView.ReadOnly = false;
@@ -493,30 +510,36 @@ namespace WebResourceManager
             // Widen the line number margin to fit the line count
             var digits = codeView.Lines.Count.ToString().Length;
             codeView.Margins[0].Width = codeView.TextWidth(Style.LineNumber, new string('9', digits + 1)) + 4;
-
-            ShowOnly(codeView);
         }
 
+        /// <summary>
+        /// Shows a message in place of the live preview and hides the code pane.
+        /// </summary>
         private void ShowNoPreview(string message)
         {
+            ShowNoPreviewMessage(message);
+            ShowCode(null);
+        }
+
+        private void ShowNoPreviewMessage(string message)
+        {
             lblNoPreview.Text = message;
-            ShowOnly(lblNoPreview);
+            ShowLive(lblNoPreview);
         }
 
         private void ClearPreview()
         {
             current = null;
             tsbSave.Enabled = false;
-            tsbViewSource.Visible = false;
             tslPreviewTitle.Text = "Preview";
             tslPreviewTitle.Image = null;
             lblDetails.Text = string.Empty;
             ShowNoPreview("Select a web resource to preview it.");
         }
 
-        private void ShowOnly(Control control)
+        private void ShowLive(Control control)
         {
-            foreach (var view in new Control[] { lblNoPreview, pbImage, codeView, browser })
+            foreach (var view in new Control[] { lblNoPreview, pbImage, browser })
             {
                 view.Visible = view == control;
             }

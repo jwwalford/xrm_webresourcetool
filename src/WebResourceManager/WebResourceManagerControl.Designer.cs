@@ -50,7 +50,11 @@ namespace WebResourceManager
             this.pbImage = new System.Windows.Forms.PictureBox();
             this.tsPreview = new System.Windows.Forms.ToolStrip();
             this.tslPreviewTitle = new System.Windows.Forms.ToolStripLabel();
-            this.tsbViewSource = new System.Windows.Forms.ToolStripButton();
+            this.tcLeft = new System.Windows.Forms.TabControl();
+            this.tpTools = new System.Windows.Forms.TabPage();
+            this.tpExplorer = new System.Windows.Forms.TabPage();
+            this.toolsPanel = new WebResourceManager.ToolsPanel();
+            this.scPreview = new System.Windows.Forms.SplitContainer();
             this.lblDetails = new System.Windows.Forms.Label();
             this.tsMain.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scMain)).BeginInit();
@@ -62,6 +66,12 @@ namespace WebResourceManager
             this.pnlPreview.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).BeginInit();
             this.tsPreview.SuspendLayout();
+            this.tcLeft.SuspendLayout();
+            this.tpTools.SuspendLayout();
+            this.tpExplorer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.scPreview)).BeginInit();
+            this.scPreview.Panel1.SuspendLayout();
+            this.scPreview.SuspendLayout();
             this.SuspendLayout();
             //
             // tsMain
@@ -168,17 +178,55 @@ namespace WebResourceManager
             //
             // scMain.Panel1
             //
-            this.scMain.Panel1.Controls.Add(this.lvWebResources);
-            this.scMain.Panel1.Controls.Add(this.ssList);
+            this.scMain.Panel1.Controls.Add(this.tcLeft);
             //
             // scMain.Panel2
             //
-            this.scMain.Panel2.Controls.Add(this.pnlPreview);
+            this.scMain.Panel2.Controls.Add(this.scPreview);
             this.scMain.Panel2.Controls.Add(this.lblDetails);
             this.scMain.Panel2.Controls.Add(this.tsPreview);
             this.scMain.Size = new System.Drawing.Size(1000, 575);
-            this.scMain.SplitterDistance = 520;
+            this.scMain.SplitterDistance = 480;
             this.scMain.TabIndex = 1;
+            //
+            // tcLeft
+            //
+            this.tcLeft.Controls.Add(this.tpTools);
+            this.tcLeft.Controls.Add(this.tpExplorer);
+            this.tcLeft.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tcLeft.Name = "tcLeft";
+            this.tcLeft.SelectedIndex = 0;
+            this.tcLeft.TabIndex = 0;
+            //
+            // tpTools
+            //
+            this.tpTools.Controls.Add(this.toolsPanel);
+            this.tpTools.Name = "tpTools";
+            this.tpTools.Text = "Tools";
+            this.tpTools.UseVisualStyleBackColor = true;
+            //
+            // toolsPanel
+            //
+            this.toolsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.toolsPanel.Name = "toolsPanel";
+            //
+            // tpExplorer
+            //
+            this.tpExplorer.Controls.Add(this.lvWebResources);
+            this.tpExplorer.Controls.Add(this.ssList);
+            this.tpExplorer.Name = "tpExplorer";
+            this.tpExplorer.Text = "Resource explorer";
+            this.tpExplorer.UseVisualStyleBackColor = true;
+            //
+            // scPreview
+            //
+            this.scPreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.scPreview.Name = "scPreview";
+            this.scPreview.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.scPreview.Panel1.Controls.Add(this.pnlPreview);
+            this.scPreview.Size = new System.Drawing.Size(476, 500);
+            this.scPreview.SplitterDistance = 260;
+            this.scPreview.TabIndex = 2;
             //
             // lvWebResources
             //
@@ -288,8 +336,7 @@ namespace WebResourceManager
             //
             this.tsPreview.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.tsPreview.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tslPreviewTitle,
-            this.tsbViewSource});
+            this.tslPreviewTitle});
             this.tsPreview.Name = "tsPreview";
             this.tsPreview.TabIndex = 0;
             //
@@ -298,16 +345,6 @@ namespace WebResourceManager
             this.tslPreviewTitle.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.tslPreviewTitle.Name = "tslPreviewTitle";
             this.tslPreviewTitle.Text = "Preview";
-            //
-            // tsbViewSource
-            //
-            this.tsbViewSource.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.tsbViewSource.CheckOnClick = true;
-            this.tsbViewSource.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.tsbViewSource.Name = "tsbViewSource";
-            this.tsbViewSource.Text = "View source";
-            this.tsbViewSource.Visible = false;
-            this.tsbViewSource.CheckedChanged += new System.EventHandler(this.tsbViewSource_CheckedChanged);
             //
             // lblDetails
             //
@@ -342,6 +379,13 @@ namespace WebResourceManager
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).EndInit();
             this.tsPreview.ResumeLayout(false);
             this.tsPreview.PerformLayout();
+            this.tpTools.ResumeLayout(false);
+            this.tpExplorer.ResumeLayout(false);
+            this.tpExplorer.PerformLayout();
+            this.tcLeft.ResumeLayout(false);
+            this.scPreview.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.scPreview)).EndInit();
+            this.scPreview.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
         }
@@ -380,7 +424,11 @@ namespace WebResourceManager
         private System.Windows.Forms.PictureBox pbImage;
         private System.Windows.Forms.ToolStrip tsPreview;
         private System.Windows.Forms.ToolStripLabel tslPreviewTitle;
-        private System.Windows.Forms.ToolStripButton tsbViewSource;
+        private System.Windows.Forms.TabControl tcLeft;
+        private System.Windows.Forms.TabPage tpTools;
+        private System.Windows.Forms.TabPage tpExplorer;
+        private WebResourceManager.ToolsPanel toolsPanel;
+        private System.Windows.Forms.SplitContainer scPreview;
         private System.Windows.Forms.Label lblDetails;
     }
 }
