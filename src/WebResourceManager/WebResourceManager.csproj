@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <RootNamespace>WebResourceManager</RootNamespace>
+    <AssemblyName>WebResourceManager</AssemblyName>
+    <LangVersion>7.3</LangVersion>
+    <Version>1.0.0</Version>
+    <Authors>Jono</Authors>
+    <Description>Browse, filter and preview Dataverse web resources.</Description>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="XrmToolBoxPackage" Version="1.2025.10.74" ExcludeAssets="runtime" />
+    <!-- XrmToolBoxPackage 1.2025.10.74 was compiled against a newer connection library than its nuspec declares -->
+    <PackageReference Include="MscrmTools.Xrm.Connection" Version="1.2025.9.64" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <!--
+    Optional: copy the plugin into a local XrmToolBox install after each build, e.g.
+    dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
+  -->
+  <Target Name="DeployToXrmToolBox" AfterTargets="Build" Condition="'$(XrmToolBoxPluginsPath)' != ''">
+    <Copy SourceFiles="$(TargetPath);$(TargetDir)$(TargetName).pdb" DestinationFolder="$(XrmToolBoxPluginsPath)" />
+  </Target>
+
+</Project>
