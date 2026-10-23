@@ -13,6 +13,12 @@ An XrmToolBox tool for browsing Dataverse web resources by type and previewing t
   - JScript, CSS, XML, XSL, RESX: read-only code view with syntax highlighting and line numbers.
   - XAP (Silverlight): no preview; use **Save to disk**.
 - **Save to disk** and **Copy name** from the toolbar or right-click menu.
+- **New banner...**: a two-step wizard for form banners (an HTML web resource with a coloured bar, an icon and a line of text).
+  1. Pick a solution (its publisher prefix is added to the name), then enter the name, display name and description.
+  2. Design the banner: text, text colour, background colour, font size, bold, alignment, and one of 20 SVG icons with its own colour. A live preview updates as you change things.
+  - **Save to Dataverse** creates the web resource (or replaces an existing HTML one after confirming), adds it to the chosen solution and publishes it.
+  - **Export HTML...** saves the same HTML file to disk. This works without a connection.
+  - The banner fills its frame, so set its height on the form with the web resource's row count, and turn off the label and border.
 
 ## Build
 
@@ -41,3 +47,6 @@ dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 | `Services/WebResourceRepository.cs` | Dataverse queries (metadata list, content on demand) |
 | `Models/WebResourceType.cs` | Web resource type option set values, labels and preview kinds |
 | `CodeStyler.cs` | Scintilla syntax highlighting per type |
+| `Banners/BannerWizardForm.cs` | Banner wizard UI: name step, design step, live preview, save and export |
+| `Banners/BannerHtmlBuilder.cs` | Generates the banner HTML |
+| `Banners/BannerIcon.cs` | Built-in SVG icons (based on [Feather Icons](https://feathericons.com), MIT) |
