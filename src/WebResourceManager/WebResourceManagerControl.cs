@@ -8,6 +8,7 @@ using McTools.Xrm.Connection;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using ScintillaNET;
+using WebResourceManager.Banners;
 using WebResourceManager.Models;
 using WebResourceManager.Services;
 using XrmToolBox.Extensibility;
@@ -58,6 +59,31 @@ namespace WebResourceManager
                 Visible = false
             };
             pnlPreview.Controls.Add(browser);
+
+            var tsbNewBanner = new ToolStripButton
+            {
+                Name = "tsbNewBanner",
+                Text = "New banner...",
+                DisplayStyle = ToolStripItemDisplayStyle.Text,
+                ToolTipText = "Design a form banner and save it as an HTML web resource"
+            };
+            tsbNewBanner.Click += tsbNewBanner_Click;
+            tsMain.Items.Add(new ToolStripSeparator());
+            tsMain.Items.Add(tsbNewBanner);
+        }
+
+        private void tsbNewBanner_Click(object sender, EventArgs e)
+        {
+            // Not connected is fine: the wizard can still design and export to disk
+            var dataFolder = Path.Combine(Path.GetTempPath(), "XrmToolBox.WebResourceManager", "WebView2");
+            using (var wizard = new BannerWizardForm(Service, dataFolder))
+            {
+                wizard.ShowDialog(this);
+                if (wizard.SavedName != null)
+                {
+                    tsslCount.Text = "Saved " + wizard.SavedName + ". Load web resources to see it in the list.";
+                }
+            }
         }
 
         private void WebResourceManagerControl_Load(object sender, EventArgs e)
