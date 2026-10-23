@@ -27,12 +27,19 @@ namespace WebResourceManager
         private bool browserReady;
         private string pendingHtml;
         private string tempFolder;
+        private readonly ImageList typeIcons = TypeIcons.CreateImageList();
 
         public WebResourceManagerControl()
         {
             InitializeComponent();
 
             lvWebResources.ListViewItemSorter = sorter;
+            lvWebResources.SmallImageList = typeIcons;
+
+            tscbType.ComboBox.DrawMode = DrawMode.OwnerDrawFixed;
+            tscbType.ComboBox.ItemHeight = TypeIcons.BadgeSize.Height + 2;
+            tscbType.ComboBox.DrawItem += tscbType_DrawItem;
+            tslPreviewTitle.ImageScaling = ToolStripItemImageScaling.None;
 
             codeView = new Scintilla
             {
@@ -178,9 +185,31 @@ namespace WebResourceManager
             return value != null && value.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
+        private void tscbType_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+            if (e.Index < 0)
+            {
+                return;
+            }
+
+            var filter = (WebResourceTypeFilter)tscbType.Items[e.Index];
+            var iconBounds = new Rectangle(e.Bounds.Left + 2, e.Bounds.Top + (e.Bounds.Height - TypeIcons.BadgeSize.Height) / 2, TypeIcons.BadgeSize.Width, TypeIcons.BadgeSize.Height);
+
+            // Only single-type entries get a badge; "All types" and "All images" stay text-only
+            if (filter.Types.Length == 1)
+            {
+                e.Graphics.DrawImage(typeIcons.Images[TypeIcons.Key(filter.Types[0])], iconBounds);
+            }
+
+            var textBounds = new Rectangle(iconBounds.Right + 4, e.Bounds.Top, e.Bounds.Right - iconBounds.Right - 4, e.Bounds.Height);
+            TextRenderer.DrawText(e.Graphics, filter.Label, e.Font, textBounds, e.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
+            e.DrawFocusRectangle();
+        }
+
         private static ListViewItem ToListViewItem(WebResourceItem item)
         {
-            var lvi = new ListViewItem(item.Name) { Tag = item };
+            var lvi = new ListViewItem(item.Name) { Tag = item, ImageKey = TypeIcons.Key(item.Type) };
             lvi.SubItems.Add(item.DisplayName ?? string.Empty);
             lvi.SubItems.Add(item.TypeLabel);
             lvi.SubItems.Add(item.IsManaged ? "Yes" : "No");
@@ -265,6 +294,7 @@ namespace WebResourceManager
         private void ShowDetails(WebResourceItem item)
         {
             tslPreviewTitle.Text = item.Name;
+            tslPreviewTitle.Image = typeIcons.Images[TypeIcons.Key(item.Type)];
             var details = string.Format("{0}  |  {1}  |  Modified {2}{3}",
                 item.TypeLabel,
                 item.IsManaged ? "Managed" : "Unmanaged",
@@ -453,6 +483,7 @@ namespace WebResourceManager
             tsbSave.Enabled = false;
             tsbViewSource.Visible = false;
             tslPreviewTitle.Text = "Preview";
+            tslPreviewTitle.Image = null;
             lblDetails.Text = string.Empty;
             ShowNoPreview("Select a web resource to preview it.");
         }

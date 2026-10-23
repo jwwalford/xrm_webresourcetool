@@ -6,7 +6,7 @@ An XrmToolBox tool for browsing Dataverse web resources by type and previewing t
 
 - **Type filter**: load all web resources, all images, or a single type (HTML, CSS, JScript, XML, PNG, JPG, GIF, XAP, XSL, ICO, SVG, RESX).
 - **Options**: hide hidden (system) web resources (on by default) and show unmanaged only.
-- **List view** with name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name.
+- **List view** with a coloured type badge (PNG, SVG, JS, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name.
 - **Preview pane** on the right, loaded on demand when you select a row:
   - PNG, JPG, GIF, ICO: rendered image with dimensions and size. Large images shrink to fit.
   - HTML and SVG: rendered with WebView2 (Edge). Scripts are off by default; turn on **Options > Run scripts in HTML preview** if you need them. **View source** switches to the code view.

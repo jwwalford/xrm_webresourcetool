@@ -203,7 +203,7 @@ namespace WebResourceManager
             // chName
             //
             this.chName.Text = "Name";
-            this.chName.Width = 220;
+            this.chName.Width = 250;
             //
             // chDisplayName
             //
