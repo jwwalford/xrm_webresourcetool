@@ -15,38 +15,32 @@ using WebResourceManager.Services;
 namespace WebResourceManager.Banners
 {
     /// <summary>
-    /// Two step wizard that designs a form banner and saves it as an HTML web
-    /// resource (or exports it to disk). Step 1 names the web resource, step 2
-    /// designs the banner with a live preview.
+    /// Single-step banner designer shown in the right panel when the Tools tab is
+    /// active. Naming, design, icon choice and the live preview sit on one page;
+    /// Save creates an HTML web resource and Export saves the file to disk.
     /// </summary>
-    public class BannerWizardForm : Form
+    public class BannerDesignerPanel : UserControl
     {
+        private const string Caption = "Create a banner";
+
         // Web resource names allow letters, digits, underscore, hyphen, dot and forward slash
         private static readonly Regex ValidName = new Regex(@"^[A-Za-z0-9_\-\./]+$");
 
-        private readonly Microsoft.Xrm.Sdk.IOrganizationService service;
         private readonly string webViewDataFolder;
         private readonly BannerSettings settings = new BannerSettings();
         private readonly Timer refreshTimer = new Timer { Interval = 150 };
 
-        private int step;
+        private Microsoft.Xrm.Sdk.IOrganizationService service;
         private bool previewReady;
         private bool galleryReady;
         private string lastGalleryHtml;
 
-        // Shell
-        private Label lblStepTitle;
-        private Label lblStepHint;
-        private Panel pnlDetails;
-        private Panel pnlDesign;
-        private Button btnBack;
-        private Button btnNext;
         private Button btnExport;
         private Button btnSave;
-        private Button btnCancel;
         private Label lblStatus;
+        private TableLayoutPanel layout;
 
-        // Step 1
+        // Web resource details
         private ComboBox cbSolution;
         private Label lblSolutionStatus;
         private Label lblPrefix;
@@ -55,7 +49,7 @@ namespace WebResourceManager.Banners
         private TextBox txtDisplayName;
         private TextBox txtDescription;
 
-        // Step 2
+        // Design
         private TextBox txtText;
         private ColorPicker cpBackground;
         private ColorPicker cpText;
@@ -71,23 +65,15 @@ namespace WebResourceManager.Banners
         private WebView2 gallery;
         private Label lblPreviewUnavailable;
 
-        public BannerWizardForm(Microsoft.Xrm.Sdk.IOrganizationService service, string webViewDataFolder)
+        public BannerDesignerPanel(Microsoft.Xrm.Sdk.IOrganizationService service, string webViewDataFolder)
         {
             this.service = service;
             this.webViewDataFolder = webViewDataFolder;
 
-            Text = "New form banner";
-            StartPosition = FormStartPosition.CenterParent;
-            Size = new Size(920, 680);
-            MinimumSize = new Size(760, 560);
             Font = new Font("Segoe UI", 9F);
-            ShowIcon = false;
-            ShowInTaskbar = false;
-            MinimizeBox = false;
+            BackColor = SystemColors.Control;
 
-            BuildShell();
-            BuildDetailsStep();
-            BuildDesignStep();
+            BuildLayout();
 
             refreshTimer.Tick += (s, e) =>
             {
@@ -95,75 +81,106 @@ namespace WebResourceManager.Banners
                 RefreshPreview();
             };
 
-            Load += BannerWizardForm_Load;
-            FormClosed += (s, e) => refreshTimer.Dispose();
+            Load += BannerDesignerPanel_Load;
+        }
 
-            ShowStep(0);
+        /// <summary>
+        /// Raised after the banner is saved to Dataverse, with the web resource name.
+        /// </summary>
+        public event EventHandler<string> Saved;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                refreshTimer.Dispose();
+            }
+            base.Dispose(disposing);
         }
 
         #region Layout
 
-        private void BuildShell()
+        private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 64, BackColor = Color.White, Padding = new Padding(16, 10, 16, 6) };
-            lblStepTitle = new Label { Dock = DockStyle.Top, Height = 24, Font = new Font("Segoe UI", 12F, FontStyle.Bold) };
-            lblStepHint = new Label { Dock = DockStyle.Top, Height = 22, ForeColor = Color.DimGray };
-            header.Controls.Add(lblStepHint);
-            header.Controls.Add(lblStepTitle);
+            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
+            header.Controls.Add(new Label
+            {
+                Dock = DockStyle.Top,
+                Height = 20,
+                ForeColor = Color.DimGray,
+                Text = "Name it, design it and pick an icon. Save creates the HTML web resource in Dataverse; Export saves the file."
+            });
+            header.Controls.Add(new Label { Dock = DockStyle.Top, Height = 24, Text = Caption, Font = new Font("Segoe UI", 12F, FontStyle.Bold) });
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 
             var buttons = new FlowLayoutPanel
             {
                 Dock = DockStyle.Bottom,
-                Height = 48,
+                Height = 42,
                 FlowDirection = FlowDirection.RightToLeft,
-                Padding = new Padding(10, 10, 10, 6)
+                Padding = new Padding(8, 8, 8, 4)
             };
-
-            btnCancel = new Button { Text = "Cancel", Width = 90, DialogResult = DialogResult.Cancel };
             btnSave = new Button { Text = "Save to Dataverse", Width = 130 };
             btnExport = new Button { Text = "Export HTML...", Width = 110 };
-            btnNext = new Button { Text = "Next >", Width = 90 };
-            btnBack = new Button { Text = "< Back", Width = 90 };
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
-
-            btnNext.Click += BtnNext_Click;
-            btnBack.Click += (s, e) => ShowStep(0);
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
+            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, lblStatus });
 
-            buttons.Controls.AddRange(new Control[] { btnCancel, btnSave, btnExport, btnNext, btnBack, lblStatus });
-            CancelButton = btnCancel;
+            // Top row: details and banner settings side by side; then icons; then preview
+            layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, Padding = new Padding(8, 6, 8, 0) };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            // Fixed height fits the eight banner settings rows
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 275));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 160)); // sized to the preview height in LayoutPreview
 
-            pnlDetails = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16) };
-            pnlDesign = new Panel { Dock = DockStyle.Fill, Padding = new Padding(12, 8, 12, 4) };
+            var detailsGroup = BuildDetailsGroup();
+            var settingsGroup = BuildSettingsGroup();
 
-            Controls.Add(pnlDesign);
-            Controls.Add(pnlDetails);
+            var iconsGroup = new GroupBox { Text = "Icons (click to choose)", Dock = DockStyle.Fill, Padding = new Padding(8), MinimumSize = new Size(0, 120) };
+            gallery = new WebView2 { Dock = DockStyle.Fill };
+            iconsGroup.Controls.Add(gallery);
+
+            var previewGroup = BuildPreviewGroup();
+
+            layout.Controls.Add(detailsGroup, 0, 0);
+            layout.Controls.Add(settingsGroup, 1, 0);
+            layout.Controls.Add(iconsGroup, 0, 1);
+            layout.SetColumnSpan(iconsGroup, 2);
+            layout.Controls.Add(previewGroup, 0, 2);
+            layout.SetColumnSpan(previewGroup, 2);
+
+            Controls.Add(layout);
             Controls.Add(buttons);
             Controls.Add(divider);
             Controls.Add(header);
+
+            LayoutPreview();
         }
 
-        private void BuildDetailsStep()
+        private GroupBox BuildDetailsGroup()
         {
+            var group = new GroupBox { Text = "Web resource", Dock = DockStyle.Fill, Padding = new Padding(8) };
             var table = NewFormTable();
 
-            cbSolution = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 420 };
-            cbSolution.SelectedIndexChanged += (s, e) => UpdateFullName();
-            lblSolutionStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 8) };
+            cbSolution = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
+            cbSolution.SelectedIndexChanged += (s, e) => { UpdateFullName(); UpdateSaveState(); };
+            lblSolutionStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 6), MaximumSize = new Size(320, 0) };
 
             lblPrefix = new Label { AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
-            txtName = new TextBox { Width = 300 };
+            txtName = new TextBox { Width = 220 };
             txtName.TextChanged += (s, e) => UpdateFullName();
             var namePanel = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
             namePanel.Controls.Add(lblPrefix);
             namePanel.Controls.Add(txtName);
-            lblFullName = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 8) };
+            lblFullName = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 6), MaximumSize = new Size(320, 0) };
 
-            txtDisplayName = new TextBox { Width = 420 };
-            txtDescription = new TextBox { Width = 420, Height = 70, Multiline = true, ScrollBars = ScrollBars.Vertical };
+            txtDisplayName = new TextBox { Dock = DockStyle.Fill };
+            txtDisplayName.TextChanged += (s, e) => { settings.Title = txtDisplayName.Text.Trim(); QueueRefresh(); };
+            txtDescription = new TextBox { Dock = DockStyle.Fill, Height = 48, Multiline = true, ScrollBars = ScrollBars.Vertical };
 
             AddRow(table, "Solution:", cbSolution);
             AddRow(table, string.Empty, lblSolutionStatus);
@@ -175,22 +192,16 @@ namespace WebResourceManager.Banners
             txtName.Text = "banners/form_banner";
             txtDisplayName.Text = "Form banner";
 
-            pnlDetails.Controls.Add(table);
+            group.Controls.Add(table);
+            return group;
         }
 
-        private void BuildDesignStep()
+        private GroupBox BuildSettingsGroup()
         {
-            var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2 };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 420));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 170));
-
-            // Settings
-            var settingsGroup = new GroupBox { Text = "Banner", Dock = DockStyle.Fill, Padding = new Padding(8) };
+            var group = new GroupBox { Text = "Banner", Dock = DockStyle.Fill, Padding = new Padding(8) };
             var table = NewFormTable();
 
-            txtText = new TextBox { Width = 260, Text = settings.Text };
+            txtText = new TextBox { Dock = DockStyle.Fill, Text = settings.Text };
             txtText.TextChanged += (s, e) => { settings.Text = txtText.Text; QueueRefresh(); };
 
             cpBackground = new ColorPicker(settings.BackgroundColor);
@@ -236,14 +247,12 @@ namespace WebResourceManager.Banners
             AddRow(table, "Icon:", cbIcon);
             AddRow(table, "Icon colour:", cpIcon);
             AddRow(table, string.Empty, chkIconFilled);
-            settingsGroup.Controls.Add(table);
+            group.Controls.Add(table);
+            return group;
+        }
 
-            // Icon gallery
-            var iconsGroup = new GroupBox { Text = "Icons (click to choose)", Dock = DockStyle.Fill, Padding = new Padding(8) };
-            gallery = new WebView2 { Dock = DockStyle.Fill };
-            iconsGroup.Controls.Add(gallery);
-
-            // Preview
+        private GroupBox BuildPreviewGroup()
+        {
             var previewGroup = new GroupBox { Text = "Preview", Dock = DockStyle.Fill, Padding = new Padding(8) };
             var previewOptions = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 30, WrapContents = false };
             nudPreviewHeight = new NumericUpDown { Minimum = 24, Maximum = 200, Value = 50, Width = 60 };
@@ -252,7 +261,7 @@ namespace WebResourceManager.Banners
             previewOptions.Controls.Add(nudPreviewHeight);
             previewOptions.Controls.Add(new Label
             {
-                Text = "px  (on the form, the banner fills the height set by the web resource's row count)",
+                Text = "px  (on the form, the row count sets the height)",
                 AutoSize = true,
                 ForeColor = Color.DimGray,
                 Margin = new Padding(0, 6, 3, 3)
@@ -268,13 +277,7 @@ namespace WebResourceManager.Banners
             previewGroup.Controls.Add(pnlPreviewHost);
             previewGroup.Controls.Add(previewOptions);
 
-            layout.Controls.Add(settingsGroup, 0, 0);
-            layout.Controls.Add(iconsGroup, 1, 0);
-            layout.Controls.Add(previewGroup, 0, 1);
-            layout.SetColumnSpan(previewGroup, 2);
-
-            pnlDesign.Controls.Add(layout);
-            LayoutPreview();
+            return previewGroup;
         }
 
         private static TableLayoutPanel NewFormTable()
@@ -297,54 +300,32 @@ namespace WebResourceManager.Banners
         private void LayoutPreview()
         {
             preview.Height = (int)nudPreviewHeight.Value;
+
+            // Room for the group caption, the height option and the grey surround
+            layout.RowStyles[2].Height = preview.Height + 100;
         }
 
         #endregion
 
-        #region Steps
+        #region Naming
 
-        private void ShowStep(int index)
-        {
-            step = index;
-            pnlDetails.Visible = index == 0;
-            pnlDesign.Visible = index == 1;
-            btnBack.Visible = index == 1;
-            btnNext.Visible = index == 0;
-            btnExport.Visible = index == 1;
-            btnSave.Visible = index == 1;
-            btnCancel.Text = index == 1 ? "Close" : "Cancel";
-            lblStatus.Text = string.Empty;
-
-            if (index == 0)
-            {
-                lblStepTitle.Text = "Step 1 of 2: Name your banner";
-                lblStepHint.Text = "Choose where the HTML web resource will live and what it's called.";
-                AcceptButton = btnNext;
-            }
-            else
-            {
-                lblStepTitle.Text = "Step 2 of 2: Design your banner";
-                lblStepHint.Text = "Pick colours, text and an icon. Save creates the web resource in Dataverse; Export saves the HTML file.";
-                AcceptButton = null;
-                QueueRefresh();
-            }
-
-            UpdateSaveState();
-        }
-
-        private void BtnNext_Click(object sender, EventArgs e)
+        /// <summary>
+        /// Checks the name and fills in a missing display name. Returns false and
+        /// tells the user what's wrong if the name can't be used.
+        /// </summary>
+        private bool ValidateName()
         {
             var name = txtName.Text.Trim();
             if (name.Length == 0)
             {
                 ShowValidation("Enter a name for the web resource.", txtName);
-                return;
+                return false;
             }
 
             if (!ValidName.IsMatch(name))
             {
                 ShowValidation("The name can only contain letters, numbers, underscores, hyphens, dots and forward slashes.", txtName);
-                return;
+                return false;
             }
 
             if (txtDisplayName.Text.Trim().Length == 0)
@@ -352,13 +333,12 @@ namespace WebResourceManager.Banners
                 txtDisplayName.Text = name.Split('/').Last();
             }
 
-            settings.Title = txtDisplayName.Text.Trim();
-            ShowStep(1);
+            return true;
         }
 
         private void ShowValidation(string message, Control focus)
         {
-            MessageBox.Show(this, message, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             focus.Focus();
         }
 
@@ -407,9 +387,28 @@ namespace WebResourceManager.Banners
 
         #region Loading
 
-        private async void BannerWizardForm_Load(object sender, EventArgs e)
+        private void BannerDesignerPanel_Load(object sender, EventArgs e)
         {
             InitializeWebViews();
+            LoadSolutions();
+        }
+
+        /// <summary>
+        /// Points the designer at a new connection (or none) and reloads the solution list.
+        /// </summary>
+        public void SetService(Microsoft.Xrm.Sdk.IOrganizationService newService)
+        {
+            service = newService;
+            if (Created)
+            {
+                LoadSolutions();
+            }
+        }
+
+        private async void LoadSolutions()
+        {
+            cbSolution.Items.Clear();
+            UpdateSaveState();
 
             if (service == null)
             {
@@ -419,11 +418,18 @@ namespace WebResourceManager.Banners
                 return;
             }
 
+            var requested = service;
             lblSolutionStatus.Text = "Loading solutions...";
             cbSolution.Enabled = false;
             try
             {
-                var solutions = await Task.Run(() => new WebResourceRepository(service).GetUnmanagedSolutions());
+                var solutions = await Task.Run(() => new WebResourceRepository(requested).GetUnmanagedSolutions());
+                if (requested != service)
+                {
+                    // The connection changed while loading; a newer load is under way
+                    return;
+                }
+
                 cbSolution.Items.AddRange(solutions.Cast<object>().ToArray());
                 if (cbSolution.Items.Count > 0)
                 {
@@ -546,6 +552,11 @@ namespace WebResourceManager.Banners
 
         private void BtnExport_Click(object sender, EventArgs e)
         {
+            if (!ValidateName())
+            {
+                return;
+            }
+
             var fileName = FullName.Split('/').Last();
             using (var dialog = new SaveFileDialog
             {
@@ -566,7 +577,7 @@ namespace WebResourceManager.Banners
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "Could not export the banner: " + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, "Could not export the banner: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
@@ -574,7 +585,7 @@ namespace WebResourceManager.Banners
         private async void BtnSave_Click(object sender, EventArgs e)
         {
             var solution = SelectedSolution;
-            if (service == null || solution == null)
+            if (service == null || solution == null || !ValidateName())
             {
                 return;
             }
@@ -594,14 +605,14 @@ namespace WebResourceManager.Banners
                     if (existing.Type != WebResourceType.Html)
                     {
                         MessageBox.Show(this, string.Format("A {0} web resource named {1} already exists. Choose another name.", existing.TypeLabel, name),
-                            Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            Caption, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         lblStatus.Text = string.Empty;
                         return;
                     }
 
                     var prompt = string.Format("A web resource named {0} already exists{1}.\r\n\r\nReplace its content with this banner?",
                         name, existing.IsManaged ? " and is managed, so this adds an unmanaged customisation on top" : string.Empty);
-                    if (MessageBox.Show(this, prompt, Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                    if (MessageBox.Show(this, prompt, Caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                     {
                         lblStatus.Text = string.Empty;
                         return;
@@ -612,17 +623,17 @@ namespace WebResourceManager.Banners
                 var existingId = existing != null ? existing.Id : (Guid?)null;
                 await Task.Run(() => repository.SaveHtml(existingId, name, displayName, description, html, solution.UniqueName));
 
-                SavedName = name;
+                Saved?.Invoke(this, name);
                 lblStatus.Text = "Saved and published " + name;
                 MessageBox.Show(this,
                     string.Format("{0} was {1} and published{2}.\r\n\r\nAdd it to a form as a web resource; set the row count to control the banner height and turn off \"Display label on the form\" and the border.",
                         name, existing != null ? "updated" : "created", solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
-                    Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Caption, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 lblStatus.Text = string.Empty;
-                MessageBox.Show(this, "Could not save the banner: " + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Could not save the banner: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -630,17 +641,11 @@ namespace WebResourceManager.Banners
             }
         }
 
-        /// <summary>
-        /// Name of the last web resource saved to Dataverse, or null if nothing was saved.
-        /// </summary>
-        public string SavedName { get; private set; }
-
         private void SetBusy(bool busy, string message)
         {
             UseWaitCursor = busy;
             btnSave.Enabled = !busy;
             btnExport.Enabled = !busy;
-            btnBack.Enabled = !busy;
             if (message != null)
             {
                 lblStatus.Text = message;

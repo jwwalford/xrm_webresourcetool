@@ -29,6 +29,9 @@ namespace WebResourceManager
         private string pendingHtml;
         private string tempFolder;
         private readonly ImageList typeIcons = TypeIcons.CreateImageList();
+        private Panel pnlToolHost;
+        private Label lblPickTool;
+        private BannerDesignerPanel bannerDesigner;
 
         public WebResourceManagerControl()
         {
@@ -60,6 +63,21 @@ namespace WebResourceManager
             };
             pnlPreview.Controls.Add(browser);
 
+            // Tools open in the right panel while the Tools tab is active; the
+            // explorer's preview takes the panel back on the Resource explorer tab
+            lblPickTool = new Label
+            {
+                Dock = DockStyle.Fill,
+                ForeColor = SystemColors.GrayText,
+                Text = "Pick a tool on the left to start.",
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            pnlToolHost = new Panel { Dock = DockStyle.Fill };
+            pnlToolHost.Controls.Add(lblPickTool);
+            scMain.Panel2.Controls.Add(pnlToolHost);
+            pnlToolHost.BringToFront();
+            tcLeft.SelectedIndexChanged += (s, e) => UpdateRightPanel();
+
             toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
             toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future HTML tool", null);
@@ -72,17 +90,27 @@ namespace WebResourceManager
 
         private void OpenBannerWizard()
         {
-            // Not connected is fine: the wizard can still design and export to disk
-            var dataFolder = Path.Combine(Path.GetTempPath(), "XrmToolBox.WebResourceManager", "WebView2");
-            using (var wizard = new BannerWizardForm(Service, dataFolder))
+            if (bannerDesigner == null)
             {
-                wizard.ShowDialog(this);
-                if (wizard.SavedName != null)
-                {
-                    tsslCount.Text = "Saved " + wizard.SavedName + ". Load web resources to see it in the list.";
-                    tcLeft.SelectedTab = tpExplorer;
-                }
+                // Not connected is fine: the designer can still design and export to disk
+                var dataFolder = Path.Combine(Path.GetTempPath(), "XrmToolBox.WebResourceManager", "WebView2");
+                bannerDesigner = new BannerDesignerPanel(Service, dataFolder) { Dock = DockStyle.Fill };
+                bannerDesigner.Saved += (s, name) => tsslCount.Text = "Saved " + name + ". Load web resources to see it in the list.";
+                pnlToolHost.Controls.Add(bannerDesigner);
             }
+
+            bannerDesigner.BringToFront();
+            tcLeft.SelectedTab = tpTools;
+            UpdateRightPanel();
+        }
+
+        private void UpdateRightPanel()
+        {
+            var showTools = tcLeft.SelectedTab == tpTools;
+            pnlToolHost.Visible = showTools;
+            tsPreview.Visible = !showTools;
+            lblDetails.Visible = !showTools;
+            scPreview.Visible = !showTools;
         }
 
         private void WebResourceManagerControl_Load(object sender, EventArgs e)
@@ -94,6 +122,7 @@ namespace WebResourceManager
             tscbType.SelectedIndex = 0;
 
             InitializeBrowser();
+            UpdateRightPanel();
         }
 
         private async void InitializeBrowser()
@@ -142,6 +171,7 @@ namespace WebResourceManager
             lvWebResources.Items.Clear();
             ClearPreview();
             tsslCount.Text = "Connected to " + detail?.ConnectionName + ". Pick a type and click Load web resources.";
+            bannerDesigner?.SetService(newService);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
