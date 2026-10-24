@@ -95,7 +95,7 @@ namespace WebResourceManager.Images
                 ForeColor = Color.DimGray,
                 Text = "Pick an icon, set its colours and size, and save it as an SVG web resource. Export saves the .svg file."
             });
-            header.Controls.Add(new Label { Dock = DockStyle.Top, Height = 24, Text = Caption, Font = new Font("Segoe UI", 12F, FontStyle.Bold) });
+            header.Controls.Add(ActionIcons.ToolTitle(Caption, ActionIcons.ToolSvg));
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 

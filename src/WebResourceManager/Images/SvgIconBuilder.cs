@@ -18,7 +18,7 @@ namespace WebResourceManager.Images
     {
         public BannerIcon Icon { get; set; } = IconGallery.FindByKey("document");
 
-        public Color IconColor { get; set; } = Color.FromArgb(0, 120, 212);
+        public Color IconColor { get; set; } = Color.FromArgb(0x00, 0x7A, 0xCC);
 
         public bool Filled { get; set; }
 

@@ -12,9 +12,9 @@ namespace WebResourceManager.Banners
     {
         public BannerSettings()
         {
-            // Defaults: black bar with a white outline icon and white text
+            // Defaults: #007ACC bar with a white outline icon and white text
             Text = "My Banner";
-            BackgroundColor = Color.Black;
+            BackgroundColor = Color.FromArgb(0x00, 0x7A, 0xCC);
             TextColor = Color.White;
             IconColor = Color.White;
             Icon = BannerIcon.All[1];

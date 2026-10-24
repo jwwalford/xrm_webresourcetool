@@ -122,7 +122,7 @@ namespace WebResourceManager.Images
                 ForeColor = Color.DimGray,
                 Text = "Choose an image file, adjust its format and size if you need to, and save it as a web resource. Export saves the converted file."
             });
-            header.Controls.Add(new Label { Dock = DockStyle.Top, Height = 24, Text = Caption, Font = new Font("Segoe UI", 12F, FontStyle.Bold) });
+            header.Controls.Add(ActionIcons.ToolTitle(Caption, ActionIcons.ToolUpload));
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 
