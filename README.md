@@ -56,39 +56,6 @@ Copy `webresource_generator.dll` into your XrmToolBox `Plugins` folder (by defau
 dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 ```
 
-XrmToolBox caches each plugin's name and images in `Plugins\manifest.json` and only refreshes them when a DLL's assembly version changes. Every build gets a new version (`1.1.<days since 2026-01-01>.<minute of the day, UTC>`), so a new DLL is picked up on restart. If the tool list still shows an old name or logo, close XrmToolBox, delete `Plugins\manifest.json` and start it again.
-
-## Publish to the XrmToolBox Tool Library
-
-```
-dotnet pack -c Release
-```
-
-This builds the plugin and writes `artifacts/webresource_generator.<version>.nupkg` from `src/WebResourceManager/webresource_generator.nuspec`. The package follows the Tool Library rules:
-
-- Id `webresource_generator` (the assembly name) and title "Assisted Web Resource Generator".
-- The package version is the assembly version of the same build, so the Tool Library doesn't keep offering an update.
-- Icon URL points at `assets/plugin-80x80.png` in this repository, project URL at the repository.
-- Depends on `XrmToolBox` 1.2025.10.74 (the version the plugin is built against), not `XrmToolBoxPackage`.
-- Contains only `lib/net48/Plugins/webresource_generator.dll`, plus the icon.
-
-Update the release notes in the nuspec before each release.
-
-### Publishing from GitHub (Trusted Publishing)
-
-`.github/workflows/publish-nuget.yml` packs the plugin and pushes it to nuget.org when a GitHub release is published, or when run by hand from the Actions tab. It uses NuGet Trusted Publishing, so no API key is stored: GitHub gives the job a short-lived token and `NuGet/login` exchanges it for a one-hour key. One-off setup:
-
-1. On nuget.org, open your user menu > **Trusted Publishing** and add a policy with Repository Owner `jwwalford`, Repository `xrm_webresourcetool` and Workflow File `publish-nuget.yml`. Leave Environment empty.
-2. In the GitHub repository, add an Actions secret `NUGET_USER` with your nuget.org profile name (not your email address).
-
-To publish by hand instead, push the package with your own API key:
-
-```
-dotnet nuget push artifacts/webresource_generator.<version>.nupkg --api-key <your key> --source https://api.nuget.org/v3/index.json
-```
-
-Then submit the tool on the XrmToolBox website so it is listed in the Tool Library.
-
 ## Project layout
 
 | File | Purpose |
