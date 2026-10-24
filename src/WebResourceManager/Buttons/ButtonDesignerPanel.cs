@@ -36,6 +36,7 @@ namespace WebResourceManager.Buttons
         private Button btnExport;
         private Button btnSave;
         private Label lblStatus;
+        private SaveProgress saveProgress;
         private TableLayoutPanel layout;
 
         private WebResourceDetailsBox details;
@@ -86,6 +87,15 @@ namespace WebResourceManager.Buttons
         public event EventHandler<string> Saved;
 
         /// <summary>
+        /// Raised when Save is clicked without a connection, so the host can open the connection dialog.
+        /// </summary>
+        public event EventHandler ConnectionRequested
+        {
+            add { details.ConnectionRequested += value; }
+            remove { details.ConnectionRequested -= value; }
+        }
+
+        /// <summary>
         /// Points the designer at a new connection (or none) and reloads the solution list.
         /// </summary>
         public void SetService(Microsoft.Xrm.Sdk.IOrganizationService newService)
@@ -107,15 +117,7 @@ namespace WebResourceManager.Buttons
 
         private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
-            header.Controls.Add(new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 20,
-                ForeColor = Color.DimGray,
-                Text = "Style the button, pick an icon and choose what it does. Save creates the HTML web resource in Dataverse; Export saves the file."
-            });
-            header.Controls.Add(new Label { Dock = DockStyle.Top, Height = 24, Text = Caption, Font = new Font("Segoe UI", 12F, FontStyle.Bold) });
+            var header = ActionIcons.ToolHeader(Caption, "Style the button, pick an icon and choose what it does. Save creates the HTML web resource in Dataverse; Export saves the file.", ActionIcons.ToolButton);
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 
@@ -128,10 +130,13 @@ namespace WebResourceManager.Buttons
             };
             btnSave = new Button { Text = "Save to Dataverse", Width = 130, Enabled = false };
             btnExport = new Button { Text = "Export HTML...", Width = 110 };
+            ActionIcons.Apply(btnSave, ActionIcons.Save);
+            ActionIcons.Apply(btnExport, ActionIcons.Export);
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
-            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, lblStatus });
+            saveProgress = new SaveProgress(lblStatus);
+            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, saveProgress, lblStatus });
 
             // Details | look on top, icons | click action in the middle, preview at the bottom
             layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, Padding = new Padding(8, 6, 8, 0) };
@@ -430,7 +435,7 @@ namespace WebResourceManager.Buttons
                 if (html != lastGalleryHtml)
                 {
                     lastGalleryHtml = html;
-                    gallery.CoreWebView2.NavigateToString(html);
+                    _ = IconGalleryView.ShowAsync(gallery, html);
                 }
             }
         }
@@ -487,7 +492,7 @@ namespace WebResourceManager.Buttons
 
         private async void BtnSave_Click(object sender, EventArgs e)
         {
-            if (!details.CanSave || !details.ValidateName(Caption))
+            if (!details.EnsureConnected() || !details.CanSave || !details.ValidateName(Caption))
             {
                 return;
             }
@@ -497,16 +502,16 @@ namespace WebResourceManager.Buttons
             try
             {
                 var outcome = await WebResourcePublisher.SaveAsync(this, Caption, service, details, WebResourceType.Html,
-                    ButtonHtmlBuilder.Build(settings), "this button", status => lblStatus.Text = status);
+                    ButtonHtmlBuilder.Build(settings), "this button", saveProgress.Report);
                 if (outcome == SaveOutcome.Cancelled)
                 {
-                    lblStatus.Text = string.Empty;
+                    saveProgress.Reset();
                     return;
                 }
 
                 var name = details.FullName;
                 Saved?.Invoke(this, name);
-                lblStatus.Text = "Saved and published " + name;
+                saveProgress.Complete("Saved and published " + name);
                 MessageBox.Show(this,
                     string.Format("{0} was {1} and published{2}.\r\n\r\nAdd it to a form as a web resource; set the row count for the height and turn off \"Display label on the form\" and the border.",
                         name, outcome == SaveOutcome.Updated ? "updated" : "created", solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
@@ -514,7 +519,7 @@ namespace WebResourceManager.Buttons
             }
             catch (Exception ex)
             {
-                lblStatus.Text = string.Empty;
+                saveProgress.Fail();
                 MessageBox.Show(this, "Could not save the button: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally

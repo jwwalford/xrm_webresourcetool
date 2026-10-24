@@ -65,6 +65,7 @@ h1 {
         private Button btnExport;
         private Button btnSave;
         private Label lblStatus;
+        private SaveProgress saveProgress;
 
         public CustomCodePanel(Microsoft.Xrm.Sdk.IOrganizationService service, string webViewDataFolder)
         {
@@ -91,6 +92,15 @@ h1 {
         /// </summary>
         public event EventHandler<string> Saved;
 
+        /// <summary>
+        /// Raised when Save is clicked without a connection, so the host can open the connection dialog.
+        /// </summary>
+        public event EventHandler ConnectionRequested
+        {
+            add { details.ConnectionRequested += value; }
+            remove { details.ConnectionRequested -= value; }
+        }
+
         public void SetService(Microsoft.Xrm.Sdk.IOrganizationService newService)
         {
             service = newService;
@@ -110,15 +120,7 @@ h1 {
 
         private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
-            header.Controls.Add(new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 20,
-                ForeColor = Color.DimGray,
-                Text = "Write HTML or CSS and watch the preview update. Save creates the web resource in Dataverse; Export saves the file."
-            });
-            header.Controls.Add(new Label { Dock = DockStyle.Top, Height = 24, Text = Caption, Font = new Font("Segoe UI", 12F, FontStyle.Bold) });
+            var header = ActionIcons.ToolHeader(Caption, "Write HTML or CSS and watch the preview update. Save creates the web resource in Dataverse; Export saves the file.", ActionIcons.ToolCode);
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 
@@ -131,10 +133,13 @@ h1 {
             };
             btnSave = new Button { Text = "Save to Dataverse", Width = 130, Enabled = false };
             btnExport = new Button { Text = "Export...", Width = 90 };
+            ActionIcons.Apply(btnSave, ActionIcons.Save);
+            ActionIcons.Apply(btnExport, ActionIcons.Export);
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
-            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, lblStatus });
+            saveProgress = new SaveProgress(lblStatus);
+            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, saveProgress, lblStatus });
 
             // Details and preview side by side, the editor takes the rest
             var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(8, 6, 8, 0) };
@@ -161,7 +166,8 @@ h1 {
         private GroupBox BuildPreviewGroup()
         {
             var group = new GroupBox { Text = "Preview", Dock = DockStyle.Fill, Padding = new Padding(8) };
-            preview = new WebView2 { Dock = DockStyle.Fill };
+            // White behind the page, so HTML without its own background previews as it would on a form
+            preview = new WebView2 { Dock = DockStyle.Fill, DefaultBackgroundColor = Color.White };
             lblPreviewUnavailable = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, Visible = false };
             group.Controls.Add(preview);
             group.Controls.Add(lblPreviewUnavailable);
@@ -279,6 +285,9 @@ h1 {
                 var environment = await CoreWebView2Environment.CreateAsync(null, webViewDataFolder);
                 await preview.EnsureCoreWebView2Async(environment);
                 preview.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
+
+                // Don't let a dark Windows theme switch pages that support dark mode to black
+                preview.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Light;
                 previewReady = true;
                 RefreshPreview();
             }
@@ -361,7 +370,7 @@ h1 {
 
         private async void BtnSave_Click(object sender, EventArgs e)
         {
-            if (!details.CanSave || !details.ValidateName(Caption))
+            if (!details.EnsureConnected() || !details.CanSave || !details.ValidateName(Caption))
             {
                 return;
             }
@@ -371,16 +380,16 @@ h1 {
             try
             {
                 var outcome = await WebResourcePublisher.SaveAsync(this, Caption, service, details, type, editor.Text,
-                    "this code", status => lblStatus.Text = status);
+                    "this code", saveProgress.Report);
                 if (outcome == SaveOutcome.Cancelled)
                 {
-                    lblStatus.Text = string.Empty;
+                    saveProgress.Reset();
                     return;
                 }
 
                 var name = details.FullName;
                 Saved?.Invoke(this, name);
-                lblStatus.Text = "Saved and published " + name;
+                saveProgress.Complete("Saved and published " + name);
                 MessageBox.Show(this,
                     string.Format("{0} was {1} and published{2}.", name, outcome == SaveOutcome.Updated ? "updated" : "created",
                         solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
@@ -388,7 +397,7 @@ h1 {
             }
             catch (Exception ex)
             {
-                lblStatus.Text = string.Empty;
+                saveProgress.Fail();
                 MessageBox.Show(this, "Could not save: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally

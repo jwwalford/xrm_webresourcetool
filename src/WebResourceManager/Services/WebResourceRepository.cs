@@ -125,10 +125,20 @@ namespace WebResourceManager.Services
         /// </summary>
         public Guid SaveText(Guid? existingId, string name, string displayName, string description, string text, WebResourceType type, string solutionUniqueName)
         {
+            return SaveContent(existingId, name, displayName, description, EncodeText(text), type, solutionUniqueName);
+        }
+
+        /// <summary>
+        /// Creates or updates a web resource from base64 content (any type), adds it
+        /// to the solution unless it's the Default solution, and publishes it unless
+        /// publish is false. Returns the web resource id.
+        /// </summary>
+        public Guid SaveContent(Guid? existingId, string name, string displayName, string description, string base64Content, WebResourceType type, string solutionUniqueName, bool publish = true)
+        {
             var entity = new Entity("webresource");
             entity["displayname"] = displayName;
             entity["description"] = description;
-            entity["content"] = EncodeText(text);
+            entity["content"] = base64Content;
 
             Guid id;
             if (existingId.HasValue)
@@ -154,12 +164,28 @@ namespace WebResourceManager.Services
                 service.Execute(add);
             }
 
-            var publish = new OrganizationRequest("PublishXml");
-            publish["ParameterXml"] = string.Format(
-                "<importexportxml><webresources><webresource>{0}</webresource></webresources></importexportxml>", id.ToString("B"));
-            service.Execute(publish);
+            if (publish)
+            {
+                Publish(new[] { id });
+            }
 
             return id;
+        }
+
+        /// <summary>
+        /// Publishes several web resources with a single PublishXml request.
+        /// </summary>
+        public void Publish(IEnumerable<Guid> ids)
+        {
+            var items = string.Concat(ids.Select(id => "<webresource>" + id.ToString("B") + "</webresource>"));
+            if (items.Length == 0)
+            {
+                return;
+            }
+
+            var publish = new OrganizationRequest("PublishXml");
+            publish["ParameterXml"] = "<importexportxml><webresources>" + items + "</webresources></importexportxml>";
+            service.Execute(publish);
         }
 
         public static string EncodeText(string text)

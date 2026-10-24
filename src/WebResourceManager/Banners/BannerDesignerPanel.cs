@@ -35,6 +35,7 @@ namespace WebResourceManager.Banners
         private Button btnExport;
         private Button btnSave;
         private Label lblStatus;
+        private SaveProgress saveProgress;
         private TableLayoutPanel layout;
 
         private WebResourceDetailsBox details;
@@ -79,6 +80,15 @@ namespace WebResourceManager.Banners
         /// </summary>
         public event EventHandler<string> Saved;
 
+        /// <summary>
+        /// Raised when Save is clicked without a connection, so the host can open the connection dialog.
+        /// </summary>
+        public event EventHandler ConnectionRequested
+        {
+            add { details.ConnectionRequested += value; }
+            remove { details.ConnectionRequested -= value; }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -92,15 +102,7 @@ namespace WebResourceManager.Banners
 
         private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
-            header.Controls.Add(new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 20,
-                ForeColor = Color.DimGray,
-                Text = "Name it, design it and pick an icon. Save creates the HTML web resource in Dataverse; Export saves the file."
-            });
-            header.Controls.Add(new Label { Dock = DockStyle.Top, Height = 24, Text = Caption, Font = new Font("Segoe UI", 12F, FontStyle.Bold) });
+            var header = ActionIcons.ToolHeader(Caption, "Name it, design it and pick an icon. Save creates the HTML web resource in Dataverse; Export saves the file.", ActionIcons.ToolBanner);
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 
@@ -113,10 +115,13 @@ namespace WebResourceManager.Banners
             };
             btnSave = new Button { Text = "Save to Dataverse", Width = 130 };
             btnExport = new Button { Text = "Export HTML...", Width = 110 };
+            ActionIcons.Apply(btnSave, ActionIcons.Save);
+            ActionIcons.Apply(btnExport, ActionIcons.Export);
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
-            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, lblStatus });
+            saveProgress = new SaveProgress(lblStatus);
+            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, saveProgress, lblStatus });
 
             // Top row: details and banner settings side by side; then icons; then preview
             layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, Padding = new Padding(8, 6, 8, 0) };
@@ -349,7 +354,7 @@ namespace WebResourceManager.Banners
                 if (html != lastGalleryHtml)
                 {
                     lastGalleryHtml = html;
-                    gallery.CoreWebView2.NavigateToString(html);
+                    _ = IconGalleryView.ShowAsync(gallery, html);
                 }
             }
         }
@@ -403,7 +408,7 @@ namespace WebResourceManager.Banners
 
         private async void BtnSave_Click(object sender, EventArgs e)
         {
-            if (!details.CanSave || !details.ValidateName(Caption))
+            if (!details.EnsureConnected() || !details.CanSave || !details.ValidateName(Caption))
             {
                 return;
             }
@@ -413,16 +418,16 @@ namespace WebResourceManager.Banners
             try
             {
                 var outcome = await WebResourcePublisher.SaveAsync(this, Caption, service, details, WebResourceType.Html,
-                    BannerHtmlBuilder.Build(settings), "this banner", status => lblStatus.Text = status);
+                    BannerHtmlBuilder.Build(settings), "this banner", saveProgress.Report);
                 if (outcome == SaveOutcome.Cancelled)
                 {
-                    lblStatus.Text = string.Empty;
+                    saveProgress.Reset();
                     return;
                 }
 
                 var name = details.FullName;
                 Saved?.Invoke(this, name);
-                lblStatus.Text = "Saved and published " + name;
+                saveProgress.Complete("Saved and published " + name);
                 MessageBox.Show(this,
                     string.Format("{0} was {1} and published{2}.\r\n\r\nAdd it to a form as a web resource; set the row count to control the banner height and turn off \"Display label on the form\" and the border.",
                         name, outcome == SaveOutcome.Updated ? "updated" : "created", solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
@@ -430,7 +435,7 @@ namespace WebResourceManager.Banners
             }
             catch (Exception ex)
             {
-                lblStatus.Text = string.Empty;
+                saveProgress.Fail();
                 MessageBox.Show(this, "Could not save the banner: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally

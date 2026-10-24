@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace WebResourceManager.Banners
 {
@@ -7,6 +8,8 @@ namespace WebResourceManager.Banners
     /// with strokes in currentColor, so the icon picks up the chosen icon colour.
     /// Shapes are based on Feather Icons (MIT licence, https://feathericons.com);
     /// the Law and Accounting shapes not in Feather are drawn in the same style.
+    /// Some Hardware and Buildings shapes are based on Lucide (ISC licence,
+    /// https://lucide.dev), Feather's continuation.
     /// </summary>
     public class BannerIcon
     {
@@ -14,6 +17,11 @@ namespace WebResourceManager.Banners
         public const string Law = "Law";
         public const string Accounting = "Accounting";
         public const string Sales = "Sales";
+        public const string Hardware = "Hardware";
+        public const string Buildings = "Buildings";
+        public const string IT = "IT";
+        public const string Emojis = "Emojis";
+        public const string Numbers = "Numbers";
 
         public BannerIcon(string key, string label, string markup, string category = General)
         {
@@ -82,7 +90,57 @@ namespace WebResourceManager.Banners
             new BannerIcon("target", "Target", "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"6\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/>", Sales),
             new BannerIcon("customers", "Customers", "<path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>", Sales),
             new BannerIcon("phone", "Phone", "<path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z\"/>", Sales),
-            new BannerIcon("payment", "Payment", "<rect x=\"1\" y=\"4\" width=\"22\" height=\"16\" rx=\"2\" ry=\"2\"/><line x1=\"1\" y1=\"10\" x2=\"23\" y2=\"10\"/>", Sales)
-        };
+            new BannerIcon("payment", "Payment", "<rect x=\"1\" y=\"4\" width=\"22\" height=\"16\" rx=\"2\" ry=\"2\"/><line x1=\"1\" y1=\"10\" x2=\"23\" y2=\"10\"/>", Sales),
+
+            new BannerIcon("wrench", "Wrench", "<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z\"/>", Hardware),
+            new BannerIcon("hammer", "Hammer", "<path d=\"M15 12l-8.5 8.5a2.12 2.12 0 0 1-3-3L12 9\"/><path d=\"M17.64 15L22 10.64\"/><path d=\"M20.91 11.7l-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91\"/>", Hardware),
+            new BannerIcon("cog", "Settings", "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z\"/>", Hardware),
+            new BannerIcon("ruler", "Ruler", "<path d=\"M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0z\"/><path d=\"M14.5 12.5l2-2\"/><path d=\"M11.5 9.5l2-2\"/><path d=\"M8.5 6.5l2-2\"/><path d=\"M17.5 15.5l2-2\"/>", Hardware),
+            new BannerIcon("toolbox", "Toolbox", "<rect x=\"2\" y=\"8\" width=\"20\" height=\"13\" rx=\"2\"/><path d=\"M8 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3\"/><line x1=\"2\" y1=\"13\" x2=\"22\" y2=\"13\"/><line x1=\"10\" y1=\"13\" x2=\"10\" y2=\"15\"/><line x1=\"14\" y1=\"13\" x2=\"14\" y2=\"15\"/>", Hardware),
+            new BannerIcon("plug", "Plug", "<path d=\"M12 22v-5\"/><path d=\"M9 8V2\"/><path d=\"M15 8V2\"/><path d=\"M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z\"/>", Hardware),
+            new BannerIcon("battery", "Battery", "<rect x=\"1\" y=\"6\" width=\"18\" height=\"12\" rx=\"2\" ry=\"2\"/><line x1=\"23\" y1=\"13\" x2=\"23\" y2=\"11\"/>", Hardware),
+
+            new BannerIcon("office", "Office", "<rect x=\"4\" y=\"2\" width=\"16\" height=\"20\" rx=\"2\"/><path d=\"M9 22v-4h6v4\"/><path d=\"M8 6h.01\"/><path d=\"M12 6h.01\"/><path d=\"M16 6h.01\"/><path d=\"M8 10h.01\"/><path d=\"M12 10h.01\"/><path d=\"M16 10h.01\"/><path d=\"M8 14h.01\"/><path d=\"M12 14h.01\"/><path d=\"M16 14h.01\"/>", Buildings),
+            new BannerIcon("factory", "Factory", "<path d=\"M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z\"/><path d=\"M17 18h1\"/><path d=\"M12 18h1\"/><path d=\"M7 18h1\"/>", Buildings),
+            new BannerIcon("warehouse", "Warehouse", "<path d=\"M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35A2 2 0 0 1 3.26 6.5l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35z\"/><path d=\"M6 18h12\"/><path d=\"M6 14h12\"/><rect x=\"6\" y=\"10\" width=\"12\" height=\"12\"/>", Buildings),
+            new BannerIcon("store", "Store", "<path d=\"M3 9l1.5-5h15L21 9\"/><path d=\"M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0\"/><path d=\"M5 11v10h14V11\"/><path d=\"M10 21v-6h4v6\"/>", Buildings),
+            new BannerIcon("hospital", "Hospital", "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"16\"/><line x1=\"8\" y1=\"12\" x2=\"16\" y2=\"12\"/>", Buildings),
+            new BannerIcon("school", "School", "<path d=\"M22 10L12 5 2 10l10 5 10-5z\"/><path d=\"M6 12v5c3 3 9 3 12 0v-5\"/>", Buildings),
+            new BannerIcon("city", "City", "<rect x=\"3\" y=\"7\" width=\"8\" height=\"14\"/><rect x=\"11\" y=\"3\" width=\"10\" height=\"18\"/><line x1=\"14\" y1=\"7\" x2=\"14.01\" y2=\"7\"/><line x1=\"18\" y1=\"7\" x2=\"18.01\" y2=\"7\"/><line x1=\"14\" y1=\"11\" x2=\"14.01\" y2=\"11\"/><line x1=\"18\" y1=\"11\" x2=\"18.01\" y2=\"11\"/><line x1=\"14\" y1=\"15\" x2=\"14.01\" y2=\"15\"/><line x1=\"18\" y1=\"15\" x2=\"18.01\" y2=\"15\"/><line x1=\"6\" y1=\"11\" x2=\"6.01\" y2=\"11\"/><line x1=\"6\" y1=\"15\" x2=\"6.01\" y2=\"15\"/>", Buildings),
+
+            new BannerIcon("monitor", "Monitor", "<rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"/><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"/>", IT),
+            new BannerIcon("laptop", "Laptop", "<rect x=\"4\" y=\"4\" width=\"16\" height=\"11\" rx=\"1\"/><path d=\"M2 19h20l-2-4H4z\"/>", IT),
+            new BannerIcon("server", "Server", "<rect x=\"2\" y=\"2\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\"/><rect x=\"2\" y=\"14\" width=\"20\" height=\"8\" rx=\"2\" ry=\"2\"/><line x1=\"6\" y1=\"6\" x2=\"6.01\" y2=\"6\"/><line x1=\"6\" y1=\"18\" x2=\"6.01\" y2=\"18\"/>", IT),
+            new BannerIcon("database", "Database", "<ellipse cx=\"12\" cy=\"5\" rx=\"9\" ry=\"3\"/><path d=\"M21 12c0 1.66-4 3-9 3s-9-1.34-9-3\"/><path d=\"M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5\"/>", IT),
+            new BannerIcon("wifi", "Wi-Fi", "<path d=\"M5 12.55a11 11 0 0 1 14.08 0\"/><path d=\"M1.42 9a16 16 0 0 1 21.16 0\"/><path d=\"M8.53 16.11a6 6 0 0 1 6.95 0\"/><line x1=\"12\" y1=\"20\" x2=\"12.01\" y2=\"20\"/>", IT),
+            new BannerIcon("cloud", "Cloud", "<path d=\"M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z\"/>", IT),
+            new BannerIcon("code", "Code", "<polyline points=\"16 18 22 12 16 6\"/><polyline points=\"8 6 2 12 8 18\"/>", IT),
+            new BannerIcon("cpu", "Processor", "<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"2\" ry=\"2\"/><rect x=\"9\" y=\"9\" width=\"6\" height=\"6\"/><line x1=\"9\" y1=\"1\" x2=\"9\" y2=\"4\"/><line x1=\"15\" y1=\"1\" x2=\"15\" y2=\"4\"/><line x1=\"9\" y1=\"20\" x2=\"9\" y2=\"23\"/><line x1=\"15\" y1=\"20\" x2=\"15\" y2=\"23\"/><line x1=\"20\" y1=\"9\" x2=\"23\" y2=\"9\"/><line x1=\"20\" y1=\"14\" x2=\"23\" y2=\"14\"/><line x1=\"1\" y1=\"9\" x2=\"4\" y2=\"9\"/><line x1=\"1\" y1=\"14\" x2=\"4\" y2=\"14\"/>", IT),
+            new BannerIcon("printer", "Printer", "<polyline points=\"6 9 6 2 18 2 18 9\"/><path d=\"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2\"/><rect x=\"6\" y=\"14\" width=\"12\" height=\"8\"/>", IT),
+            new BannerIcon("smartphone", "Mobile", "<rect x=\"5\" y=\"2\" width=\"14\" height=\"20\" rx=\"2\" ry=\"2\"/><line x1=\"12\" y1=\"18\" x2=\"12.01\" y2=\"18\"/>", IT),
+
+            new BannerIcon("smile", "Happy", "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M8 14s1.5 2 4 2 4-2 4-2\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"/>", Emojis),
+            new BannerIcon("laugh", "Laughing", "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M7 13h10a5 5 0 0 1-10 0z\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"/>", Emojis),
+            new BannerIcon("wink", "Wink", "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M8 14s1.5 2 4 2 4-2 4-2\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><path d=\"M14 9h3\"/>", Emojis),
+            new BannerIcon("meh", "Neutral", "<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"8\" y1=\"15\" x2=\"16\" y2=\"15\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"/>", Emojis),
+            new BannerIcon("surprised", "Surprised", "<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"15.5\" r=\"2\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"/>", Emojis),
+            new BannerIcon("frown", "Sad", "<circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M16 16s-1.5-2-4-2-4 2-4 2\"/><line x1=\"9\" y1=\"9\" x2=\"9.01\" y2=\"9\"/><line x1=\"15\" y1=\"9\" x2=\"15.01\" y2=\"9\"/>", Emojis),
+            new BannerIcon("thumbsup", "Thumbs up", "<path d=\"M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3\"/>", Emojis),
+            new BannerIcon("thumbsdown", "Thumbs down", "<path d=\"M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17\"/>", Emojis)
+        }.Concat(CircledNumbers()).ToList();
+
+        /// <summary>
+        /// 1 to 10 in circles. The digit is text filled in the icon colour, so it
+        /// stays solid whether or not the shape is filled.
+        /// </summary>
+        private static IEnumerable<BannerIcon> CircledNumbers()
+        {
+            for (var n = 1; n <= 10; n++)
+            {
+                yield return new BannerIcon("number" + n, "Number " + n,
+                    "<circle cx=\"12\" cy=\"12\" r=\"10\"/><text x=\"12\" y=\"16\" text-anchor=\"middle\" font-family=\"Segoe UI, Arial, sans-serif\" font-weight=\"600\" font-size=\"" +
+                    (n < 10 ? "11" : "9.5") + "\" fill=\"currentColor\" fill-opacity=\"1\" stroke=\"none\">" + n + "</text>", Numbers);
+            }
+        }
     }
 }

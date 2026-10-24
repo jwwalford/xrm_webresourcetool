@@ -10,6 +10,7 @@ using Microsoft.Web.WebView2.WinForms;
 using ScintillaNET;
 using WebResourceManager.Banners;
 using WebResourceManager.Buttons;
+using WebResourceManager.Images;
 using WebResourceManager.Models;
 using WebResourceManager.Services;
 using WebResourceManager.Tools;
@@ -32,10 +33,16 @@ namespace WebResourceManager
         private string tempFolder;
         private readonly ImageList typeIcons = TypeIcons.CreateImageList();
         private Panel pnlToolHost;
-        private Label lblPickTool;
+        private TableLayoutPanel pnlPickTool;
         private BannerDesignerPanel bannerDesigner;
         private CustomCodePanel customCode;
         private ButtonDesignerPanel buttonDesigner;
+        private IconGeneratorPanel iconGenerator;
+        private Button btnIconTool;
+        private SvgIconPanel svgIcon;
+        private Button btnSvgTool;
+        private ImageUploadPanel imageUpload;
+        private Button btnUploadTool;
         private Button btnBannerTool;
         private Button btnButtonTool;
         private Button btnCustomCodeTool;
@@ -43,9 +50,10 @@ namespace WebResourceManager
 
         // Left panel width as a share of the control, remembered per tab: the
         // tool buttons need less room than the explorer's list
-        private double toolsSplit = 0.3;
+        private double toolsSplit = 0.28;
         private double explorerSplit = 0.5;
         private bool applyingSplit;
+        private bool userDraggingSplit;
 
         public WebResourceManagerControl()
         {
@@ -53,6 +61,15 @@ namespace WebResourceManager
 
             lvWebResources.ListViewItemSorter = sorter;
             lvWebResources.SmallImageList = typeIcons;
+
+            tsbClose.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            tsbClose.Image = ActionIcons.Close;
+            tsbClose.ToolTipText = "Close";
+            tsbLoad.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
+            tsbLoad.Image = ActionIcons.Load;
+            tsbSave.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
+            tsbSave.Image = ActionIcons.Save;
+            tsmiSave.Image = ActionIcons.Save;
 
             tscbType.ComboBox.DrawMode = DrawMode.OwnerDrawFixed;
             tscbType.ComboBox.ItemHeight = TypeIcons.BadgeSize.Height + 2;
@@ -81,15 +98,28 @@ namespace WebResourceManager
 
             // Tools open in the right panel while the Tools tab is active; the
             // explorer's preview takes the panel back on the Resource explorer tab
-            lblPickTool = new Label
+            pnlPickTool = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4 };
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            pnlPickTool.Controls.Add(new PictureBox
             {
-                Dock = DockStyle.Fill,
+                Anchor = AnchorStyles.None,
+                Image = ActionIcons.EmptyStateToolbox,
+                Size = ActionIcons.EmptyStateToolbox.Size,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Margin = new Padding(0, 0, 0, 8)
+            }, 0, 1);
+            pnlPickTool.Controls.Add(new Label
+            {
+                Anchor = AnchorStyles.None,
+                AutoSize = true,
                 ForeColor = SystemColors.GrayText,
-                Text = "Pick a tool on the left to start.",
-                TextAlign = ContentAlignment.MiddleCenter
-            };
+                Text = "Pick a tool on the left to start."
+            }, 0, 2);
             pnlToolHost = new Panel { Dock = DockStyle.Fill };
-            pnlToolHost.Controls.Add(lblPickTool);
+            pnlToolHost.Controls.Add(pnlPickTool);
             scMain.Panel2.Controls.Add(pnlToolHost);
             pnlToolHost.BringToFront();
             tcLeft.SelectedIndexChanged += (s, e) => UpdateRightPanel();
@@ -101,26 +131,31 @@ namespace WebResourceManager
                 Dock = DockStyle.Bottom,
                 Height = 44,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = Color.Black,
+                BackColor = Color.FromArgb(0x00, 0x7A, 0xCC),
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 12f, FontStyle.Regular),
                 Cursor = Cursors.Hand,
                 UseVisualStyleBackColor = false
             };
             btnGoToExplorer.FlatAppearance.BorderSize = 0;
-            btnGoToExplorer.FlatAppearance.MouseOverBackColor = Color.FromArgb(48, 48, 48);
+            btnGoToExplorer.FlatAppearance.MouseOverBackColor = Color.FromArgb(0x00, 0x5A, 0x9E);
             btnGoToExplorer.Click += (s, e) => tcLeft.SelectedTab = tpExplorer;
             tpTools.Controls.Add(btnGoToExplorer);
+            scMain.SplitterMoving += (s, e) => userDraggingSplit = true;
             scMain.SplitterMoved += ScMain_SplitterMoved;
+
+            // The control is created at its designer size and only gets its real
+            // width once XrmToolBox docks it, so re-apply the share on every resize
+            scMain.SizeChanged += (s, e) => ApplySplit();
 
             toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
             btnBannerTool = toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
             btnButtonTool = toolsPanel.AddTool("Create a button...", "Design a form button with an icon and a click action, and save it as an HTML web resource", OpenButtonDesigner);
             btnCustomCodeTool = toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
             toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            btnIconTool = toolsPanel.AddTool("Create an icon...", "Resize an image into icon sizes such as 16x16 and 32x32 and save the ones you pick as web resources", OpenIconGenerator);
+            btnSvgTool = toolsPanel.AddTool("Create an SVG icon...", "Pick an icon from the gallery, set its colours, background and size and save it as an SVG web resource", OpenSvgIcon);
+            btnUploadTool = toolsPanel.AddTool("Upload an image...", "Upload a PNG, JPG, GIF, BMP, ICO or SVG file as a web resource, converting or resizing it if needed", OpenImageUpload);
         }
 
         private static string WebViewDataFolder
@@ -135,6 +170,7 @@ namespace WebResourceManager
                 // Not connected is fine: the designer can still design and export to disk
                 bannerDesigner = new BannerDesignerPanel(Service, WebViewDataFolder);
                 bannerDesigner.Saved += Tool_Saved;
+                bannerDesigner.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(bannerDesigner, btnBannerTool);
@@ -146,6 +182,7 @@ namespace WebResourceManager
             {
                 buttonDesigner = new ButtonDesignerPanel(Service, WebViewDataFolder);
                 buttonDesigner.Saved += Tool_Saved;
+                buttonDesigner.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(buttonDesigner, btnButtonTool);
@@ -157,9 +194,46 @@ namespace WebResourceManager
             {
                 customCode = new CustomCodePanel(Service, WebViewDataFolder);
                 customCode.Saved += Tool_Saved;
+                customCode.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(customCode, btnCustomCodeTool);
+        }
+
+        private void OpenIconGenerator()
+        {
+            if (iconGenerator == null)
+            {
+                iconGenerator = new IconGeneratorPanel(Service);
+                iconGenerator.Saved += Tool_Saved;
+                iconGenerator.ConnectionRequested += Tool_ConnectionRequested;
+            }
+
+            ShowTool(iconGenerator, btnIconTool);
+        }
+
+        private void OpenSvgIcon()
+        {
+            if (svgIcon == null)
+            {
+                svgIcon = new SvgIconPanel(Service, WebViewDataFolder);
+                svgIcon.Saved += Tool_Saved;
+                svgIcon.ConnectionRequested += Tool_ConnectionRequested;
+            }
+
+            ShowTool(svgIcon, btnSvgTool);
+        }
+
+        private void OpenImageUpload()
+        {
+            if (imageUpload == null)
+            {
+                imageUpload = new ImageUploadPanel(Service, WebViewDataFolder);
+                imageUpload.Saved += Tool_Saved;
+                imageUpload.ConnectionRequested += Tool_ConnectionRequested;
+            }
+
+            ShowTool(imageUpload, btnUploadTool);
         }
 
         /// <summary>
@@ -176,8 +250,35 @@ namespace WebResourceManager
             }
 
             tool.BringToFront();
+            UpdateToolHeaders();
             tcLeft.SelectedTab = tpTools;
             UpdateRightPanel();
+        }
+
+        /// <summary>
+        /// Shows the current connection on the right of every open tool's header.
+        /// </summary>
+        private void UpdateToolHeaders()
+        {
+            var connection = Service != null ? ConnectionDetail?.ConnectionName : null;
+            foreach (Control tool in pnlToolHost.Controls)
+            {
+                tool.Controls.OfType<ToolHeader>().FirstOrDefault()?.SetConnection(Service != null, connection);
+            }
+        }
+
+        /// <summary>
+        /// A tool's Save was clicked without a connection. ExecuteMethod opens the
+        /// XrmToolBox connection dialog and runs ConnectedForSave once connected.
+        /// </summary>
+        private void Tool_ConnectionRequested(object sender, EventArgs e)
+        {
+            ExecuteMethod(ConnectedForSave);
+        }
+
+        private void ConnectedForSave()
+        {
+            tsslCount.Text = "Connected to " + ConnectionDetail?.ConnectionName + ". Choose a solution and click Save to Dataverse again.";
         }
 
         private void Tool_Saved(object sender, string name)
@@ -189,6 +290,13 @@ namespace WebResourceManager
         {
             var showTools = tcLeft.SelectedTab == tpTools;
             pnlToolHost.Visible = showTools;
+
+            // Search and Save to disk only apply to the explorer list
+            tssSeparator2.Visible = !showTools;
+            tslSearch.Visible = !showTools;
+            tstSearch.Visible = !showTools;
+            tssSeparator3.Visible = !showTools;
+            tsbSave.Visible = !showTools;
             tsPreview.Visible = !showTools;
             lblDetails.Visible = !showTools;
             scPreview.Visible = !showTools;
@@ -220,11 +328,14 @@ namespace WebResourceManager
 
         private void ScMain_SplitterMoved(object sender, SplitterEventArgs e)
         {
-            // Remember where the user dragged it for the current tab
-            if (applyingSplit || scMain.Width <= scMain.SplitterWidth)
+            // Remember where the user dragged it for the current tab; ignore
+            // moves caused by resizing or by ApplySplit itself
+            if (!userDraggingSplit || applyingSplit || scMain.Width <= scMain.SplitterWidth)
             {
                 return;
             }
+
+            userDraggingSplit = false;
 
             var ratio = (double)scMain.SplitterDistance / (scMain.Width - scMain.SplitterWidth);
             if (tcLeft.SelectedTab == tpTools)
@@ -290,8 +401,6 @@ namespace WebResourceManager
 
         public override void UpdateConnection(Microsoft.Xrm.Sdk.IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
         {
-            base.UpdateConnection(newService, detail, actionName, parameter);
-
             // A different environment means the current list no longer applies
             webResources.Clear();
             lvWebResources.Items.Clear();
@@ -300,6 +409,14 @@ namespace WebResourceManager
             bannerDesigner?.SetService(newService);
             customCode?.SetService(newService);
             buttonDesigner?.SetService(newService);
+            iconGenerator?.SetService(newService);
+            svgIcon?.SetService(newService);
+            imageUpload?.SetService(newService);
+
+            // Last, because the base class runs the action that asked for the connection
+            // (e.g. Load web resources), which must not be cleared by the reset above
+            base.UpdateConnection(newService, detail, actionName, parameter);
+            UpdateToolHeaders();
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
@@ -369,6 +486,9 @@ namespace WebResourceManager
             return value != null && value.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
+        private static readonly Bitmap DocumentGlyph = TypeIcons.DrawDocument();
+        private static readonly Bitmap PictureGlyph = TypeIcons.DrawPicture();
+
         private void tscbType_DrawItem(object sender, DrawItemEventArgs e)
         {
             e.DrawBackground();
@@ -380,10 +500,15 @@ namespace WebResourceManager
             var filter = (WebResourceTypeFilter)tscbType.Items[e.Index];
             var iconBounds = new Rectangle(e.Bounds.Left + 2, e.Bounds.Top + (e.Bounds.Height - TypeIcons.BadgeSize.Height) / 2, TypeIcons.BadgeSize.Width, TypeIcons.BadgeSize.Height);
 
-            // Only single-type entries get a badge; "All types" and "All images" stay text-only
+            // Single types get their badge; "All images" gets a picture and the mixed filter a document
             if (filter.Types.Length == 1)
             {
                 e.Graphics.DrawImage(typeIcons.Images[TypeIcons.Key(filter.Types[0])], iconBounds);
+            }
+            else
+            {
+                var allImages = filter.Types.All(t => WebResourceTypeInfo.GetPreviewKind(t) == PreviewKind.Image || t == WebResourceType.Svg);
+                e.Graphics.DrawImage(allImages ? PictureGlyph : DocumentGlyph, iconBounds);
             }
 
             var textBounds = new Rectangle(iconBounds.Right + 4, e.Bounds.Top, e.Bounds.Right - iconBounds.Right - 4, e.Bounds.Height);
