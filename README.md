@@ -46,11 +46,11 @@ Requires the .NET SDK (any recent version) or Visual Studio 2022. The project ta
 dotnet build -c Release
 ```
 
-The output is `src/WebResourceManager/bin/Release/net48/WebResourceManager.dll`. XrmToolBox libraries are reference-only, so only the plugin DLL is produced.
+The output is `src/WebResourceManager/bin/Release/net48/webresource_generator.dll`. XrmToolBox libraries are reference-only, so only the plugin DLL is produced.
 
 ## Try it in XrmToolBox
 
-Copy `WebResourceManager.dll` into your XrmToolBox `Plugins` folder (by default `%AppData%\MscrmTools\XrmToolBox\Plugins`) and restart XrmToolBox. To copy it automatically on every build:
+Copy `webresource_generator.dll` into your XrmToolBox `Plugins` folder (by default `%AppData%\MscrmTools\XrmToolBox\Plugins`) and restart XrmToolBox. Builds before October 2026 were called `WebResourceManager.dll`; delete that file if it is still there, or the tool shows up twice. To copy it automatically on every build:
 
 ```
 dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"

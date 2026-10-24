@@ -4,7 +4,7 @@
     <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
     <RootNamespace>WebResourceManager</RootNamespace>
-    <AssemblyName>WebResourceManager</AssemblyName>
+    <AssemblyName>webresource_generator</AssemblyName>
     <LangVersion>7.3</LangVersion>
     <Version>1.1.0</Version>
     <!-- XrmToolBox only re-reads a plugin's name and images (Plugins\manifest.json) when the
