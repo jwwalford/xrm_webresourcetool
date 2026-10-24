@@ -314,6 +314,10 @@ namespace WebResourceManager
             loaded = true;
             InitializeBrowser();
             UpdateRightPanel();
+
+            // Ask for a connection straight away if there isn't one (XrmToolBox shows its
+            // connection dialog), then load the list so the explorer is ready
+            ExecuteMethod(LoadWebResources);
         }
 
         private async void InitializeBrowser()
@@ -355,8 +359,6 @@ namespace WebResourceManager
 
         public override void UpdateConnection(Microsoft.Xrm.Sdk.IOrganizationService newService, ConnectionDetail detail, string actionName, object parameter)
         {
-            base.UpdateConnection(newService, detail, actionName, parameter);
-
             // A different environment means the current list no longer applies
             webResources.Clear();
             lvWebResources.Items.Clear();
@@ -368,6 +370,10 @@ namespace WebResourceManager
             iconGenerator?.SetService(newService);
             svgIcon?.SetService(newService);
             imageUpload?.SetService(newService);
+
+            // Last, because the base class runs the action that asked for the connection
+            // (e.g. Load web resources), which must not be cleared by the reset above
+            base.UpdateConnection(newService, detail, actionName, parameter);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
