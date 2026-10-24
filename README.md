@@ -1,4 +1,4 @@
-# Assisted Web Resource Generator
+<img width="800" height="100" alt="Banner" src="https://github.com/user-attachments/assets/632d3107-4492-4951-8625-04584efa3eb0" />
 
 An XrmToolBox plugin for generating HTML/CSS and Image web resources: build banners, buttons and custom HTML/CSS with live previews, and browse existing HTML, CSS and image web resources.
 
