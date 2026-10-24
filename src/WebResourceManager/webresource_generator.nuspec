@@ -14,8 +14,9 @@
     <copyright>Copyright (c) 2026 Jono</copyright>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <projectUrl>https://github.com/jwwalford/xrm_webresourcetool</projectUrl>
+    <!-- Icon URL only, no embedded <icon>: with an embedded icon nuget.org replaces the
+         icon URL with its own .../icon address, which the XrmToolBox site rejects -->
     <iconUrl>https://raw.githubusercontent.com/jwwalford/xrm_webresourcetool/main/assets/plugin-80x80.png</iconUrl>
-    <icon>images/plugin-80x80.png</icon>
     <summary>Generate HTML/CSS and image web resources for Dataverse.</summary>
     <description>Generate HTML/CSS and image web resources: design form banners and buttons, write custom HTML/CSS with a live preview, create icons and SVG icons, upload images, and browse existing web resources.</description>
     <releaseNotes>First release in the Tool Library.
@@ -34,6 +35,5 @@
   </metadata>
   <files>
     <file src="bin/$configuration$/net48/webresource_generator.dll" target="lib/net48/Plugins/" />
-    <file src="../../assets/plugin-80x80.png" target="images/" />
   </files>
 </package>

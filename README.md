@@ -68,9 +68,9 @@ This builds the plugin and writes `artifacts/webresource_generator.<version>.nup
 
 - Id `webresource_generator` (the assembly name) and title "Assisted Web Resource Generator".
 - The package version is the assembly version of the same build, so the Tool Library doesn't keep offering an update.
-- Icon URL points at `assets/plugin-80x80.png` in this repository, project URL at the repository.
+- Icon URL points at `assets/plugin-80x80.png` in this repository (not embedded, so nuget.org keeps the URL the XrmToolBox site needs), project URL at the repository.
 - Depends on `XrmToolBox` 1.2025.10.74 (the version the plugin is built against), not `XrmToolBoxPackage`.
-- Contains only `lib/net48/Plugins/webresource_generator.dll`, plus the icon.
+- Contains only `lib/net48/Plugins/webresource_generator.dll`.
 
 Update the release notes in the nuspec before each release.
 
