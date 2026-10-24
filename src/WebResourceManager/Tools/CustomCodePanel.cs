@@ -161,7 +161,8 @@ h1 {
         private GroupBox BuildPreviewGroup()
         {
             var group = new GroupBox { Text = "Preview", Dock = DockStyle.Fill, Padding = new Padding(8) };
-            preview = new WebView2 { Dock = DockStyle.Fill };
+            // White behind the page, so HTML without its own background previews as it would on a form
+            preview = new WebView2 { Dock = DockStyle.Fill, DefaultBackgroundColor = Color.White };
             lblPreviewUnavailable = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, Visible = false };
             group.Controls.Add(preview);
             group.Controls.Add(lblPreviewUnavailable);
@@ -279,6 +280,9 @@ h1 {
                 var environment = await CoreWebView2Environment.CreateAsync(null, webViewDataFolder);
                 await preview.EnsureCoreWebView2Async(environment);
                 preview.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
+
+                // Don't let a dark Windows theme switch pages that support dark mode to black
+                preview.CoreWebView2.Profile.PreferredColorScheme = CoreWebView2PreferredColorScheme.Light;
                 previewReady = true;
                 RefreshPreview();
             }
