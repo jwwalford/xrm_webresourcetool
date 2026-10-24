@@ -5,7 +5,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
 ## Layout
 
 - **Left panel** with two tabs:
-  - **Tools**: large buttons grouped under black **HTML Tools** and **Image Tools** headers. The open tool is highlighted with a blue accent bar, and a **Resource explorer** footer button switches tabs. The left panel takes about 28% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...** and **Create custom HTML/CSS...** open in the right panel; the other buttons are placeholders for future tools.
+  - **Tools**: large buttons grouped under black **HTML Tools** and **Image Tools** headers. The open tool is highlighted with a blue accent bar, and a **Resource explorer** footer button switches tabs. The left panel takes about 28% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...**, **Create custom HTML/CSS...** and **Create an icon...** open in the right panel; the other buttons are placeholders for future tools.
   - **Resource explorer**: the list of loaded web resources, with a coloured type badge (HTML, CSS, PNG, SVG, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name.
 - **Right panel**: follows the left tab.
   - On **Tools**, it hosts the open tool (banner designer, button designer or custom HTML/CSS editor). Tools keep what you've entered when you switch between them.
@@ -30,6 +30,11 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Preview** (top right) updates as you type. HTML is rendered as a page; CSS is applied to a sample page.
   - **Code** (below) is a syntax-highlighted editor. Switch between HTML and CSS with the Type option; untouched starter code is swapped for the other type's.
   - **Save to Dataverse** creates or replaces the web resource, adds it to the solution and publishes it. **Export...** saves the file to disk.
+- **Create an icon...** (Tools tab, Image Tools): turn an image into icon web resources.
+  - **Source image**: choose a PNG, JPG, GIF, BMP or ICO file. **Fit** pads a non-square image with transparency; **Crop** fills the square from the centre.
+  - **Sizes**: 16, 24, 32, 48, 64, 80 and 128 px, each shown at actual size on a light and a dark background. Tick the ones to keep (16 and 32 by default).
+  - **Save as**: PNG creates one web resource per size (`my_icon_16.png`, `my_icon_32.png`, ...); ICO creates one `.ico` holding every ticked size.
+  - **Save to Dataverse** asks once before replacing existing web resources, then saves and publishes them together. **Export...** saves the files to disk.
 - **Create a banner...** (Tools tab): a single-page designer for form banners (an HTML web resource with a coloured bar, an icon and a line of text), shown in the right panel.
   - **Web resource**: pick a solution (its publisher prefix is added to the name), then enter the name, display name and description.
   - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour (white outline by default). Pick from 36 icons in the clickable gallery, grouped into General, Law, Accounting and Sales. A live preview updates as you change things.
@@ -67,9 +72,11 @@ dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 | `Buttons/ButtonDesignerPanel.cs` | Button designer UI: details, look, icon gallery, click action, preview |
 | `Buttons/ButtonHtmlBuilder.cs` | Generates the button HTML and click handler |
 | `Banners/IconGallery.cs` | Clickable icon grid shared by the banner and button designers |
+| `Images/IconGeneratorPanel.cs` | Icon tool UI: source image, fit or crop, size previews, PNG or ICO |
+| `Images/IconResizer.cs` | High-quality square resizing and PNG / multi-size ICO encoding |
 | `Tools/CustomCodePanel.cs` | Custom HTML/CSS tool: details, live preview and code editor |
 | `Tools/WebResourceDetailsBox.cs` | Shared web resource details group (solution, name, display name, description) |
-| `Tools/WebResourcePublisher.cs` | Shared save: replace check, create or update, add to solution, publish |
+| `Tools/WebResourcePublisher.cs` | Shared save: replace check, create or update, add to solution, publish (single or several at once) |
 | `CssSamplePage.cs` | Sample page used for the CSS live preview |
 | `CodeStyler.cs` | Scintilla syntax highlighting per type |
 | `Banners/BannerDesignerPanel.cs` | Banner designer UI: details, design, icon gallery, live preview, save and export |

@@ -10,6 +10,7 @@ using Microsoft.Web.WebView2.WinForms;
 using ScintillaNET;
 using WebResourceManager.Banners;
 using WebResourceManager.Buttons;
+using WebResourceManager.Images;
 using WebResourceManager.Models;
 using WebResourceManager.Services;
 using WebResourceManager.Tools;
@@ -36,6 +37,8 @@ namespace WebResourceManager
         private BannerDesignerPanel bannerDesigner;
         private CustomCodePanel customCode;
         private ButtonDesignerPanel buttonDesigner;
+        private IconGeneratorPanel iconGenerator;
+        private Button btnIconTool;
         private Button btnBannerTool;
         private Button btnButtonTool;
         private Button btnCustomCodeTool;
@@ -124,7 +127,7 @@ namespace WebResourceManager
             btnButtonTool = toolsPanel.AddTool("Create a button...", "Design a form button with an icon and a click action, and save it as an HTML web resource", OpenButtonDesigner);
             btnCustomCodeTool = toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
             toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            btnIconTool = toolsPanel.AddTool("Create an icon...", "Resize an image into icon sizes such as 16x16 and 32x32 and save the ones you pick as web resources", OpenIconGenerator);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
         }
@@ -166,6 +169,17 @@ namespace WebResourceManager
             }
 
             ShowTool(customCode, btnCustomCodeTool);
+        }
+
+        private void OpenIconGenerator()
+        {
+            if (iconGenerator == null)
+            {
+                iconGenerator = new IconGeneratorPanel(Service);
+                iconGenerator.Saved += Tool_Saved;
+            }
+
+            ShowTool(iconGenerator, btnIconTool);
         }
 
         /// <summary>
@@ -309,6 +323,7 @@ namespace WebResourceManager
             bannerDesigner?.SetService(newService);
             customCode?.SetService(newService);
             buttonDesigner?.SetService(newService);
+            iconGenerator?.SetService(newService);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)

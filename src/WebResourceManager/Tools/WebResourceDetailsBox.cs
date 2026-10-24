@@ -81,6 +81,12 @@ namespace WebResourceManager.Tools
         public event EventHandler DisplayNameChanged;
 
         /// <summary>
+        /// Optional text for the line under the name, given the full name. Used when
+        /// a tool saves more than one web resource from a single name.
+        /// </summary>
+        public Func<string, string> DescribeName { get; set; }
+
+        /// <summary>
         /// Allowed file extensions; the first is appended to the name when it has none of them.
         /// </summary>
         public string[] Extensions
@@ -235,7 +241,22 @@ namespace WebResourceManager.Tools
         {
             var solution = SelectedSolution;
             lblPrefix.Text = solution != null && !string.IsNullOrEmpty(solution.Prefix) ? solution.Prefix + "_" : string.Empty;
-            lblFullName.Text = txtName.Text.Trim().Length > 0 ? "Web resource name: " + FullName : string.Empty;
+            if (txtName.Text.Trim().Length == 0)
+            {
+                lblFullName.Text = string.Empty;
+            }
+            else
+            {
+                lblFullName.Text = DescribeName != null ? DescribeName(FullName) : "Web resource name: " + FullName;
+            }
+        }
+
+        /// <summary>
+        /// Refreshes the line under the name, e.g. after the owner changes what DescribeName returns.
+        /// </summary>
+        public void RefreshNameHint()
+        {
+            UpdateFullName();
         }
 
         private void OnStateChanged()
