@@ -13,7 +13,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
 
 ## Features
 
-- **Connect on open**: if XrmToolBox isn't connected when the tool opens, its connection dialog appears straight away; once connected (or if already connected) the web resource list loads in the background.
+- **Connection status**: each tool page shows the connection on the right of its header ("Connected to <org>" in green, or "Not connected" in red), and updates when you connect or switch connection.
 - **Type filter**: HTML, CSS and images (default), HTML only, CSS only, all images, or a single image type (PNG, JPG, GIF, ICO, SVG). **Load web resources** switches to the Resource explorer tab.
 - **Options**: hide hidden (system) web resources (on by default) and show unmanaged only.
 - **Preview**, loaded on demand when you select a row:

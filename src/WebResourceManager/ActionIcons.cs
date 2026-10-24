@@ -33,55 +33,12 @@ namespace WebResourceManager
         private const int ToolSize = 20;
 
         /// <summary>
-        /// The white header at the top of a tool page: the icon, then the bold
-        /// title with the description underneath it. A table lays them out, so
-        /// they line up at any display scaling.
+        /// The white header at the top of a tool page: icon, title, description
+        /// and the connection status on the right.
         /// </summary>
-        public static Panel ToolHeader(string title, string description, Image icon)
+        public static ToolHeader ToolHeader(string title, string description, Image icon)
         {
-            var header = new Panel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                BackColor = Color.White,
-                Padding = new Padding(12, 6, 12, 6)
-            };
-
-            var table = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2, RowCount = 2, Margin = new Padding(0) };
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-
-            var titleLabel = new Label
-            {
-                Text = title,
-                AutoSize = true,
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                Margin = new Padding(0, 0, 0, 2)
-            };
-            var picture = new PictureBox
-            {
-                Image = icon,
-                SizeMode = PictureBoxSizeMode.CenterImage,
-                Size = new Size(ToolSize, ToolSize),
-                Anchor = AnchorStyles.Left,
-                Margin = new Padding(0, 0, 8, 0)
-            };
-            var descriptionLabel = new Label
-            {
-                Text = description,
-                AutoSize = true,
-                ForeColor = Color.DimGray,
-                Margin = new Padding(0)
-            };
-
-            table.Controls.Add(picture, 0, 0);
-            table.Controls.Add(titleLabel, 1, 0);
-            table.Controls.Add(descriptionLabel, 1, 1);
-            header.Controls.Add(table);
-            return header;
+            return new ToolHeader(title, description, icon, ToolSize);
         }
 
         /// <summary>

@@ -231,8 +231,21 @@ namespace WebResourceManager
             }
 
             tool.BringToFront();
+            UpdateToolHeaders();
             tcLeft.SelectedTab = tpTools;
             UpdateRightPanel();
+        }
+
+        /// <summary>
+        /// Shows the current connection on the right of every open tool's header.
+        /// </summary>
+        private void UpdateToolHeaders()
+        {
+            var connection = Service != null ? ConnectionDetail?.ConnectionName : null;
+            foreach (Control tool in pnlToolHost.Controls)
+            {
+                tool.Controls.OfType<ToolHeader>().FirstOrDefault()?.SetConnection(Service != null, connection);
+            }
         }
 
         private void Tool_Saved(object sender, string name)
@@ -314,10 +327,6 @@ namespace WebResourceManager
             loaded = true;
             InitializeBrowser();
             UpdateRightPanel();
-
-            // Ask for a connection straight away if there isn't one (XrmToolBox shows its
-            // connection dialog), then load the list so the explorer is ready
-            ExecuteMethod(LoadWebResources);
         }
 
         private async void InitializeBrowser()
@@ -374,6 +383,7 @@ namespace WebResourceManager
             // Last, because the base class runs the action that asked for the connection
             // (e.g. Load web resources), which must not be cleared by the reset above
             base.UpdateConnection(newService, detail, actionName, parameter);
+            UpdateToolHeaders();
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
