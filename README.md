@@ -58,6 +58,28 @@ dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 
 XrmToolBox caches each plugin's name and images in `Plugins\manifest.json` and only refreshes them when a DLL's assembly version changes. Every build gets a new version (`1.1.<days since 2026-01-01>.<minute of the day, UTC>`), so a new DLL is picked up on restart. If the tool list still shows an old name or logo, close XrmToolBox, delete `Plugins\manifest.json` and start it again.
 
+## Publish to the XrmToolBox Tool Library
+
+```
+dotnet pack -c Release
+```
+
+This builds the plugin and writes `artifacts/webresource_generator.<version>.nupkg` from `src/WebResourceManager/webresource_generator.nuspec`. The package follows the Tool Library rules:
+
+- Id `webresource_generator` (the assembly name) and title "Assisted Web Resource Generator".
+- The package version is the assembly version of the same build, so the Tool Library doesn't keep offering an update.
+- Icon URL points at `assets/plugin-80x80.png` in this repository, project URL at the repository.
+- Depends on `XrmToolBox` 1.2025.10.74 (the version the plugin is built against), not `XrmToolBoxPackage`.
+- Contains only `lib/net48/Plugins/webresource_generator.dll`, plus the icon.
+
+Update the release notes in the nuspec before each release. To publish, push the package to nuget.org with your own API key:
+
+```
+dotnet nuget push artifacts/webresource_generator.<version>.nupkg --api-key <your key> --source https://api.nuget.org/v3/index.json
+```
+
+Then submit the tool on the XrmToolBox website so it is listed in the Tool Library.
+
 ## Project layout
 
 | File | Purpose |
