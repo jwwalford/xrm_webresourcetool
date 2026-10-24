@@ -36,6 +36,9 @@ namespace WebResourceManager
         private BannerDesignerPanel bannerDesigner;
         private CustomCodePanel customCode;
         private ButtonDesignerPanel buttonDesigner;
+        private Button btnBannerTool;
+        private Button btnButtonTool;
+        private Button btnCustomCodeTool;
         private bool loaded;
 
         // Left panel width as a share of the control, remembered per tab: the
@@ -90,12 +93,30 @@ namespace WebResourceManager
             scMain.Panel2.Controls.Add(pnlToolHost);
             pnlToolHost.BringToFront();
             tcLeft.SelectedIndexChanged += (s, e) => UpdateRightPanel();
+
+            // Footer on the Tools tab that jumps to the explorer
+            var btnGoToExplorer = new Button
+            {
+                Text = "Resource explorer  \u2192",
+                Dock = DockStyle.Bottom,
+                Height = 44,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Black,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12f, FontStyle.Regular),
+                Cursor = Cursors.Hand,
+                UseVisualStyleBackColor = false
+            };
+            btnGoToExplorer.FlatAppearance.BorderSize = 0;
+            btnGoToExplorer.FlatAppearance.MouseOverBackColor = Color.FromArgb(48, 48, 48);
+            btnGoToExplorer.Click += (s, e) => tcLeft.SelectedTab = tpExplorer;
+            tpTools.Controls.Add(btnGoToExplorer);
             scMain.SplitterMoved += ScMain_SplitterMoved;
 
             toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
-            toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
-            toolsPanel.AddTool("Create a button...", "Design a form button with an icon and a click action, and save it as an HTML web resource", OpenButtonDesigner);
-            toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
+            btnBannerTool = toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
+            btnButtonTool = toolsPanel.AddTool("Create a button...", "Design a form button with an icon and a click action, and save it as an HTML web resource", OpenButtonDesigner);
+            btnCustomCodeTool = toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
             toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
@@ -116,7 +137,7 @@ namespace WebResourceManager
                 bannerDesigner.Saved += Tool_Saved;
             }
 
-            ShowTool(bannerDesigner);
+            ShowTool(bannerDesigner, btnBannerTool);
         }
 
         private void OpenButtonDesigner()
@@ -127,7 +148,7 @@ namespace WebResourceManager
                 buttonDesigner.Saved += Tool_Saved;
             }
 
-            ShowTool(buttonDesigner);
+            ShowTool(buttonDesigner, btnButtonTool);
         }
 
         private void OpenCustomCode()
@@ -138,15 +159,16 @@ namespace WebResourceManager
                 customCode.Saved += Tool_Saved;
             }
 
-            ShowTool(customCode);
+            ShowTool(customCode, btnCustomCodeTool);
         }
 
         /// <summary>
         /// Shows a tool in the right panel. Tools are kept once opened, so switching
         /// between them keeps what the user has entered.
         /// </summary>
-        private void ShowTool(Control tool)
+        private void ShowTool(Control tool, Button toolButton)
         {
+            toolsPanel.SetActive(toolButton);
             if (tool.Parent != pnlToolHost)
             {
                 tool.Dock = DockStyle.Fill;

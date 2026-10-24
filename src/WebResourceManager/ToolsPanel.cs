@@ -14,7 +14,8 @@ namespace WebResourceManager
     /// <summary>
     /// The Tools tab: coloured group headers ("HTML Tools", "Image Tools") with a
     /// stack of large buttons under each. A tool added without an action is a
-    /// disabled placeholder.
+    /// disabled placeholder. The open tool's button is highlighted with
+    /// <see cref="SetActive"/>.
     /// </summary>
     internal class ToolsPanel : Panel
     {
@@ -22,9 +23,13 @@ namespace WebResourceManager
         private static readonly Color ButtonColor = Color.FromArgb(128, 128, 128);
         private static readonly Color ButtonHoverColor = Color.FromArgb(96, 96, 96);
         private static readonly Color ButtonDisabledColor = Color.FromArgb(200, 200, 200);
+        private static readonly Color ActiveColor = Color.FromArgb(48, 48, 48);
+        private static readonly Color AccentColor = Color.FromArgb(0, 120, 212);
+        private const int AccentWidth = 6;
 
         private readonly TableLayoutPanel stack;
         private readonly ToolTip toolTip = new ToolTip();
+        private Button activeButton;
 
         public ToolsPanel()
         {
@@ -67,7 +72,8 @@ namespace WebResourceManager
         }
 
         /// <param name="onClick">Null adds a disabled placeholder.</param>
-        public void AddTool(string text, string description, Action onClick)
+        /// <returns>The button, to pass to <see cref="SetActive"/>.</returns>
+        public Button AddTool(string text, string description, Action onClick)
         {
             var button = new Button
             {
@@ -94,8 +100,52 @@ namespace WebResourceManager
                 button.Click += (s, e) => onClick();
             }
 
+            button.Paint += (s, e) =>
+            {
+                if (button == activeButton)
+                {
+                    using (var accent = new SolidBrush(AccentColor))
+                    {
+                        e.Graphics.FillRectangle(accent, 0, 0, AccentWidth, button.Height);
+                    }
+                }
+            };
+
             toolTip.SetToolTip(button, description);
             AddRow(button);
+            return button;
+        }
+
+        /// <summary>
+        /// Highlights the button of the tool that's open: darker, bold, with an accent bar.
+        /// </summary>
+        public void SetActive(Button button)
+        {
+            if (activeButton == button)
+            {
+                return;
+            }
+
+            var previous = activeButton;
+            activeButton = button;
+
+            if (previous != null)
+            {
+                Style(previous, false);
+            }
+
+            if (button != null)
+            {
+                Style(button, true);
+            }
+        }
+
+        private static void Style(Button button, bool active)
+        {
+            button.BackColor = active ? ActiveColor : ButtonColor;
+            button.FlatAppearance.MouseOverBackColor = active ? ActiveColor : ButtonHoverColor;
+            button.Font = new Font(button.Font, active ? FontStyle.Bold : FontStyle.Regular);
+            button.Invalidate();
         }
 
         private void AddRow(Control control)

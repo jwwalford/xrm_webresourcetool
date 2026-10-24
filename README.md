@@ -5,7 +5,7 @@ An XrmToolBox tool for working with Dataverse HTML, CSS and image web resources:
 ## Layout
 
 - **Left panel** with two tabs:
-  - **Tools**: large buttons grouped under black **HTML Tools** and **Image Tools** headers. The left panel takes about 30% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...** and **Create custom HTML/CSS...** open in the right panel; the other buttons are placeholders for future tools.
+  - **Tools**: large buttons grouped under black **HTML Tools** and **Image Tools** headers. The open tool is highlighted with a blue accent bar, and a **Resource explorer** footer button switches tabs. The left panel takes about 30% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...** and **Create custom HTML/CSS...** open in the right panel; the other buttons are placeholders for future tools.
   - **Resource explorer**: the list of loaded web resources, with a coloured type badge (HTML, CSS, PNG, SVG, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name.
 - **Right panel**: follows the left tab.
   - On **Tools**, it hosts the open tool (banner designer, button designer or custom HTML/CSS editor). Tools keep what you've entered when you switch between them.
