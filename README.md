@@ -1,10 +1,10 @@
-# Web Resource Manager for XrmToolBox
+# Assisted Web Resource Generator
 
-An XrmToolBox tool for browsing Dataverse web resources by type and previewing them without leaving XrmToolBox.
+An XrmToolBox plugin for generating HTML/CSS and Image web resources.
 
 ## Features
 
-- **Type filter**: load all web resources, all images, or a single type (HTML, CSS, JScript, XML, PNG, JPG, GIF, XAP, XSL, ICO, SVG, RESX).
+- **Type filter**: load web resources, all HTML/CSS, all images, or a single type (HTML, CSS, JScript, XML, PNG, JPG, GIF, ICO, SVG).
 - **Options**: hide hidden (system) web resources (on by default) and show unmanaged only.
 - **List view** with name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name.
 - **Preview pane** on the right, loaded on demand when you select a row:
