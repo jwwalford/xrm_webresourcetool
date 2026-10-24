@@ -7,18 +7,6 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
 
 ## Features
 
-- **Connection status**: each tool page shows the connection on the right of its header ("Connected to <org>" in green, or "Not connected" in red), and updates when you connect or switch connection.
-- **Working without a connection**: every tool can be used and exported to disk without a connection. Clicking **Save to Dataverse** while not connected opens the XrmToolBox connection dialog; once connected, choose a solution and save again. Dataverse calls use late-bound `Entity` and `QueryExpression` only (no early-bound classes).
-- **Type filter**: HTML, CSS and images (default), HTML only, CSS only, all images, or a single image type (PNG, JPG, GIF, ICO, SVG). **Load web resources** switches to the Resource explorer tab.
-- **Options**: hide hidden (system) web resources (on by default) and show unmanaged only.
-- **Preview**, loaded on demand when you select a row:
-  - HTML: rendered with WebView2 (Edge), with the source below. Scripts are off by default; turn on **Options > Run scripts in HTML preview** if you need them.
-  - CSS: applied to a sample page of headings, text, links, a list, form controls and a table, with the stylesheet below.
-  - SVG: rendered image, with the SVG markup below.
-  - PNG, JPG, GIF, ICO: rendered image with dimensions and size. Large images shrink to fit. There's no code pane for these.
-- **Save to disk** and **Copy name** from the toolbar or right-click menu.
-- Every tool shows a progress bar next to **Save to Dataverse** while it checks for an existing web resource, creates or updates it, and publishes; the status text names each step, and a failed save shows "Save failed" in red.
-- Toolbar and tool buttons carry small runtime-drawn icons (`ActionIcons.cs`): a red cross for Close (icon only), a refresh arrow for Load, a disk for Save and a tray arrow for Export. Each tool page shows a black icon before its title.
 - **Create a button...** (Tools tab): a single-page designer for a button to place on a form.
   - **Button**: text, tooltip, text and background colours, font size, bold, icon and icon colour (same gallery as banners), corner roundness (0 is square, 50+ is a pill), and size: fill the web resource control or a fixed width and height positioned left, centre or right.
   - **When clicked**: run JavaScript (with `Xrm` and `formContext` for the form), open a URL in a new tab, save the record, or do nothing. Scripts reach the form through `parent.Xrm`.
