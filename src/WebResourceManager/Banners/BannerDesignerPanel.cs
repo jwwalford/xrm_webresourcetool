@@ -4,13 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using WebResourceManager.Models;
-using WebResourceManager.Services;
+using WebResourceManager.Tools;
 
 namespace WebResourceManager.Banners
 {
@@ -22,9 +21,6 @@ namespace WebResourceManager.Banners
     public class BannerDesignerPanel : UserControl
     {
         private const string Caption = "Create a banner";
-
-        // Web resource names allow letters, digits, underscore, hyphen, dot and forward slash
-        private static readonly Regex ValidName = new Regex(@"^[A-Za-z0-9_\-\./]+$");
 
         private readonly string webViewDataFolder;
         private readonly BannerSettings settings = new BannerSettings();
@@ -41,14 +37,7 @@ namespace WebResourceManager.Banners
         private Label lblStatus;
         private TableLayoutPanel layout;
 
-        // Web resource details
-        private ComboBox cbSolution;
-        private Label lblSolutionStatus;
-        private Label lblPrefix;
-        private TextBox txtName;
-        private Label lblFullName;
-        private TextBox txtDisplayName;
-        private TextBox txtDescription;
+        private WebResourceDetailsBox details;
 
         // Design
         private TextBox txtText;
@@ -164,37 +153,11 @@ namespace WebResourceManager.Banners
 
         private GroupBox BuildDetailsGroup()
         {
-            var group = new GroupBox { Text = "Web resource", Dock = DockStyle.Fill, Padding = new Padding(8) };
-            var table = NewFormTable();
-
-            cbSolution = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
-            cbSolution.SelectedIndexChanged += (s, e) => { UpdateFullName(); UpdateSaveState(); };
-            lblSolutionStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 6), MaximumSize = new Size(320, 0) };
-
-            lblPrefix = new Label { AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
-            txtName = new TextBox { Width = 220 };
-            txtName.TextChanged += (s, e) => UpdateFullName();
-            var namePanel = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
-            namePanel.Controls.Add(lblPrefix);
-            namePanel.Controls.Add(txtName);
-            lblFullName = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 6), MaximumSize = new Size(320, 0) };
-
-            txtDisplayName = new TextBox { Dock = DockStyle.Fill };
-            txtDisplayName.TextChanged += (s, e) => { settings.Title = txtDisplayName.Text.Trim(); QueueRefresh(); };
-            txtDescription = new TextBox { Dock = DockStyle.Fill, Height = 48, Multiline = true, ScrollBars = ScrollBars.Vertical };
-
-            AddRow(table, "Solution:", cbSolution);
-            AddRow(table, string.Empty, lblSolutionStatus);
-            AddRow(table, "Name:", namePanel);
-            AddRow(table, string.Empty, lblFullName);
-            AddRow(table, "Display name:", txtDisplayName);
-            AddRow(table, "Description:", txtDescription);
-
-            txtName.Text = "banners/form_banner";
-            txtDisplayName.Text = "Form banner";
-
-            group.Controls.Add(table);
-            return group;
+            details = new WebResourceDetailsBox(service, "banner", "banners/form_banner", "Form banner");
+            details.StateChanged += (s, e) => UpdateSaveState();
+            details.DisplayNameChanged += (s, e) => { settings.Title = details.DisplayName; QueueRefresh(); };
+            settings.Title = details.DisplayName;
+            return details;
         }
 
         private GroupBox BuildSettingsGroup()
@@ -308,83 +271,10 @@ namespace WebResourceManager.Banners
 
         #endregion
 
-        #region Naming
-
-        /// <summary>
-        /// Checks the name and fills in a missing display name. Returns false and
-        /// tells the user what's wrong if the name can't be used.
-        /// </summary>
-        private bool ValidateName()
-        {
-            var name = txtName.Text.Trim();
-            if (name.Length == 0)
-            {
-                ShowValidation("Enter a name for the web resource.", txtName);
-                return false;
-            }
-
-            if (!ValidName.IsMatch(name))
-            {
-                ShowValidation("The name can only contain letters, numbers, underscores, hyphens, dots and forward slashes.", txtName);
-                return false;
-            }
-
-            if (txtDisplayName.Text.Trim().Length == 0)
-            {
-                txtDisplayName.Text = name.Split('/').Last();
-            }
-
-            return true;
-        }
-
-        private void ShowValidation(string message, Control focus)
-        {
-            MessageBox.Show(this, message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            focus.Focus();
-        }
-
-        private SolutionOption SelectedSolution
-        {
-            get { return cbSolution.SelectedItem as SolutionOption; }
-        }
-
-        /// <summary>
-        /// The full web resource name: publisher prefix + name + .html
-        /// </summary>
-        private string FullName
-        {
-            get
-            {
-                var name = txtName.Text.Trim();
-                var solution = SelectedSolution;
-                if (solution != null && !string.IsNullOrEmpty(solution.Prefix) &&
-                    !name.StartsWith(solution.Prefix + "_", StringComparison.OrdinalIgnoreCase))
-                {
-                    name = solution.Prefix + "_" + name;
-                }
-
-                if (!name.EndsWith(".html", StringComparison.OrdinalIgnoreCase) && !name.EndsWith(".htm", StringComparison.OrdinalIgnoreCase))
-                {
-                    name += ".html";
-                }
-
-                return name;
-            }
-        }
-
-        private void UpdateFullName()
-        {
-            var solution = SelectedSolution;
-            lblPrefix.Text = solution != null && !string.IsNullOrEmpty(solution.Prefix) ? solution.Prefix + "_" : string.Empty;
-            lblFullName.Text = txtName.Text.Trim().Length > 0 ? "Web resource name: " + FullName : string.Empty;
-        }
-
         private void UpdateSaveState()
         {
-            btnSave.Enabled = service != null && SelectedSolution != null;
+            btnSave.Enabled = details.CanSave;
         }
-
-        #endregion
 
         #region Loading
 
@@ -398,7 +288,6 @@ namespace WebResourceManager.Banners
 
             loaded = true;
             InitializeWebViews();
-            LoadSolutions();
         }
 
         /// <summary>
@@ -407,53 +296,7 @@ namespace WebResourceManager.Banners
         public void SetService(Microsoft.Xrm.Sdk.IOrganizationService newService)
         {
             service = newService;
-            if (Created)
-            {
-                LoadSolutions();
-            }
-        }
-
-        private async void LoadSolutions()
-        {
-            cbSolution.Items.Clear();
-            UpdateSaveState();
-
-            if (service == null)
-            {
-                lblSolutionStatus.Text = "Not connected to Dataverse. You can still design the banner and export it.";
-                cbSolution.Enabled = false;
-                UpdateFullName();
-                return;
-            }
-
-            var requested = service;
-            lblSolutionStatus.Text = "Loading solutions...";
-            cbSolution.Enabled = false;
-            try
-            {
-                var solutions = await Task.Run(() => new WebResourceRepository(requested).GetUnmanagedSolutions());
-                if (requested != service)
-                {
-                    // The connection changed while loading; a newer load is under way
-                    return;
-                }
-
-                cbSolution.Items.AddRange(solutions.Cast<object>().ToArray());
-                if (cbSolution.Items.Count > 0)
-                {
-                    cbSolution.SelectedIndex = 0;
-                }
-
-                cbSolution.Enabled = true;
-                lblSolutionStatus.Text = "The publisher prefix comes from the solution. The Default solution doesn't add the banner to a solution.";
-            }
-            catch (Exception ex)
-            {
-                lblSolutionStatus.Text = "Could not load solutions: " + ex.Message;
-            }
-
-            UpdateFullName();
-            UpdateSaveState();
+            details.SetService(newService);
         }
 
         private async void InitializeWebViews()
@@ -568,12 +411,12 @@ namespace WebResourceManager.Banners
 
         private void BtnExport_Click(object sender, EventArgs e)
         {
-            if (!ValidateName())
+            if (!details.ValidateName(Caption))
             {
                 return;
             }
 
-            var fileName = FullName.Split('/').Last();
+            var fileName = details.FullName.Split('/').Last();
             using (var dialog = new SaveFileDialog
             {
                 FileName = fileName,
@@ -600,50 +443,29 @@ namespace WebResourceManager.Banners
 
         private async void BtnSave_Click(object sender, EventArgs e)
         {
-            var solution = SelectedSolution;
-            if (service == null || solution == null || !ValidateName())
+            if (!details.CanSave || !details.ValidateName(Caption))
             {
                 return;
             }
 
-            var name = FullName;
-            var displayName = txtDisplayName.Text.Trim();
-            var description = txtDescription.Text.Trim();
-            var html = BannerHtmlBuilder.Build(settings);
-            var repository = new WebResourceRepository(service);
-
-            SetBusy(true, "Checking for an existing web resource...");
+            var solution = details.SelectedSolution;
+            SetBusy(true, null);
             try
             {
-                var existing = await Task.Run(() => repository.FindByName(name));
-                if (existing != null)
+                var outcome = await WebResourcePublisher.SaveAsync(this, Caption, service, details, WebResourceType.Html,
+                    BannerHtmlBuilder.Build(settings), "this banner", status => lblStatus.Text = status);
+                if (outcome == SaveOutcome.Cancelled)
                 {
-                    if (existing.Type != WebResourceType.Html)
-                    {
-                        MessageBox.Show(this, string.Format("A {0} web resource named {1} already exists. Choose another name.", existing.TypeLabel, name),
-                            Caption, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        lblStatus.Text = string.Empty;
-                        return;
-                    }
-
-                    var prompt = string.Format("A web resource named {0} already exists{1}.\r\n\r\nReplace its content with this banner?",
-                        name, existing.IsManaged ? " and is managed, so this adds an unmanaged customisation on top" : string.Empty);
-                    if (MessageBox.Show(this, prompt, Caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-                    {
-                        lblStatus.Text = string.Empty;
-                        return;
-                    }
+                    lblStatus.Text = string.Empty;
+                    return;
                 }
 
-                SetBusy(true, "Saving and publishing...");
-                var existingId = existing != null ? existing.Id : (Guid?)null;
-                await Task.Run(() => repository.SaveHtml(existingId, name, displayName, description, html, solution.UniqueName));
-
+                var name = details.FullName;
                 Saved?.Invoke(this, name);
                 lblStatus.Text = "Saved and published " + name;
                 MessageBox.Show(this,
                     string.Format("{0} was {1} and published{2}.\r\n\r\nAdd it to a form as a web resource; set the row count to control the banner height and turn off \"Display label on the form\" and the border.",
-                        name, existing != null ? "updated" : "created", solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
+                        name, outcome == SaveOutcome.Updated ? "updated" : "created", solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
                     Caption, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)

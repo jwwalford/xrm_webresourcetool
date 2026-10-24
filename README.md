@@ -5,10 +5,10 @@ An XrmToolBox tool for working with Dataverse HTML, CSS and image web resources:
 ## Layout
 
 - **Left panel** with two tabs:
-  - **Tools**: large buttons grouped under **HTML Tools** and **Image Tools**. **Create a banner...** opens the banner designer in the right panel; the other buttons are placeholders for future tools.
+  - **Tools**: large buttons grouped under **HTML Tools** and **Image Tools**. **Create a banner...** and **Create custom HTML/CSS...** open in the right panel; the other buttons are placeholders for future tools.
   - **Resource explorer**: the list of loaded web resources, with a coloured type badge (HTML, CSS, PNG, SVG, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name.
 - **Right panel**: follows the left tab.
-  - On **Tools**, it hosts the open tool (for example the banner designer).
+  - On **Tools**, it hosts the open tool (the banner designer or the custom HTML/CSS editor). Tools keep what you've entered when you switch between them.
   - On **Resource explorer**, it shows details of the selected web resource, the **live preview** on top and the **code preview** below (drag the splitter to resize).
 
 ## Features
@@ -21,6 +21,11 @@ An XrmToolBox tool for working with Dataverse HTML, CSS and image web resources:
   - SVG: rendered image, with the SVG markup below.
   - PNG, JPG, GIF, ICO: rendered image with dimensions and size. Large images shrink to fit. There's no code pane for these.
 - **Save to disk** and **Copy name** from the toolbar or right-click menu.
+- **Create custom HTML/CSS...** (Tools tab): write an HTML or CSS web resource by hand.
+  - **Web resource** details (top left) work the same way as the banner designer's.
+  - **Preview** (top right) updates as you type. HTML is rendered as a page; CSS is applied to a sample page.
+  - **Code** (below) is a syntax-highlighted editor. Switch between HTML and CSS with the Type option; untouched starter code is swapped for the other type's.
+  - **Save to Dataverse** creates or replaces the web resource, adds it to the solution and publishes it. **Export...** saves the file to disk.
 - **Create a banner...** (Tools tab): a single-page designer for form banners (an HTML web resource with a coloured bar, an icon and a line of text), shown in the right panel.
   - **Web resource**: pick a solution (its publisher prefix is added to the name), then enter the name, display name and description.
   - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour (white outline by default). Pick from 36 icons in the clickable gallery, grouped into General, Law, Accounting and Sales. A live preview updates as you change things.
@@ -55,6 +60,9 @@ dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 | `Services/WebResourceRepository.cs` | Dataverse queries (metadata list, content on demand) |
 | `Models/WebResourceType.cs` | Web resource type option set values, labels and preview kinds |
 | `ToolsPanel.cs` | The Tools tab: group headers and tool buttons |
+| `Tools/CustomCodePanel.cs` | Custom HTML/CSS tool: details, live preview and code editor |
+| `Tools/WebResourceDetailsBox.cs` | Shared web resource details group (solution, name, display name, description) |
+| `Tools/WebResourcePublisher.cs` | Shared save: replace check, create or update, add to solution, publish |
 | `CssSamplePage.cs` | Sample page used for the CSS live preview |
 | `CodeStyler.cs` | Scintilla syntax highlighting per type |
 | `Banners/BannerDesignerPanel.cs` | Banner designer UI: details, design, icon gallery, live preview, save and export |

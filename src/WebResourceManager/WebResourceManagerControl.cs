@@ -11,6 +11,7 @@ using ScintillaNET;
 using WebResourceManager.Banners;
 using WebResourceManager.Models;
 using WebResourceManager.Services;
+using WebResourceManager.Tools;
 using XrmToolBox.Extensibility;
 
 namespace WebResourceManager
@@ -32,6 +33,7 @@ namespace WebResourceManager
         private Panel pnlToolHost;
         private Label lblPickTool;
         private BannerDesignerPanel bannerDesigner;
+        private CustomCodePanel customCode;
         private bool loaded;
 
         public WebResourceManagerControl()
@@ -83,7 +85,7 @@ namespace WebResourceManager
 
             toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
             toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future HTML tool", null);
+            toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future HTML tool", null);
             toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
@@ -91,20 +93,54 @@ namespace WebResourceManager
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
         }
 
+        private static string WebViewDataFolder
+        {
+            get { return Path.Combine(Path.GetTempPath(), "XrmToolBox.WebResourceManager", "WebView2"); }
+        }
+
         private void OpenBannerWizard()
         {
             if (bannerDesigner == null)
             {
                 // Not connected is fine: the designer can still design and export to disk
-                var dataFolder = Path.Combine(Path.GetTempPath(), "XrmToolBox.WebResourceManager", "WebView2");
-                bannerDesigner = new BannerDesignerPanel(Service, dataFolder) { Dock = DockStyle.Fill };
-                bannerDesigner.Saved += (s, name) => tsslCount.Text = "Saved " + name + ". Load web resources to see it in the list.";
-                pnlToolHost.Controls.Add(bannerDesigner);
+                bannerDesigner = new BannerDesignerPanel(Service, WebViewDataFolder);
+                bannerDesigner.Saved += Tool_Saved;
             }
 
-            bannerDesigner.BringToFront();
+            ShowTool(bannerDesigner);
+        }
+
+        private void OpenCustomCode()
+        {
+            if (customCode == null)
+            {
+                customCode = new CustomCodePanel(Service, WebViewDataFolder);
+                customCode.Saved += Tool_Saved;
+            }
+
+            ShowTool(customCode);
+        }
+
+        /// <summary>
+        /// Shows a tool in the right panel. Tools are kept once opened, so switching
+        /// between them keeps what the user has entered.
+        /// </summary>
+        private void ShowTool(Control tool)
+        {
+            if (tool.Parent != pnlToolHost)
+            {
+                tool.Dock = DockStyle.Fill;
+                pnlToolHost.Controls.Add(tool);
+            }
+
+            tool.BringToFront();
             tcLeft.SelectedTab = tpTools;
             UpdateRightPanel();
+        }
+
+        private void Tool_Saved(object sender, string name)
+        {
+            tsslCount.Text = "Saved " + name + ". Load web resources to see it in the list.";
         }
 
         private void UpdateRightPanel()
@@ -177,6 +213,7 @@ namespace WebResourceManager
             ClearPreview();
             tsslCount.Text = "Connected to " + detail?.ConnectionName + ". Pick a type and click Load web resources.";
             bannerDesigner?.SetService(newService);
+            customCode?.SetService(newService);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)

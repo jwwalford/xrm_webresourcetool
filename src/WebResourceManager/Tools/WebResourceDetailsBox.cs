@@ -1,0 +1,261 @@
+using System;
+using System.Drawing;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using WebResourceManager.Models;
+using WebResourceManager.Services;
+
+namespace WebResourceManager.Tools
+{
+    /// <summary>
+    /// The "Web resource" group shared by the tools: solution (for the publisher
+    /// prefix), name, display name and description. Loads the unmanaged solutions
+    /// for the current connection.
+    /// </summary>
+    internal class WebResourceDetailsBox : GroupBox
+    {
+        // Web resource names allow letters, digits, underscore, hyphen, dot and forward slash
+        private static readonly Regex ValidName = new Regex(@"^[A-Za-z0-9_\-\./]+$");
+
+        private readonly string noun;
+        private Microsoft.Xrm.Sdk.IOrganizationService service;
+        private string[] extensions = { ".html", ".htm" };
+        private bool solutionsRequested;
+
+        private readonly ComboBox cbSolution;
+        private readonly Label lblSolutionStatus;
+        private readonly Label lblPrefix;
+        private readonly TextBox txtName;
+        private readonly Label lblFullName;
+        private readonly TextBox txtDisplayName;
+        private readonly TextBox txtDescription;
+
+        /// <param name="noun">What's being created, for the hints, e.g. "banner".</param>
+        public WebResourceDetailsBox(Microsoft.Xrm.Sdk.IOrganizationService service, string noun, string defaultName, string defaultDisplayName)
+        {
+            this.service = service;
+            this.noun = noun;
+
+            Text = "Web resource";
+            Dock = DockStyle.Fill;
+            Padding = new Padding(8);
+
+            var table = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2 };
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+            cbSolution = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Dock = DockStyle.Fill };
+            cbSolution.SelectedIndexChanged += (s, e) => { UpdateFullName(); OnStateChanged(); };
+            lblSolutionStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 6), MaximumSize = new Size(320, 0) };
+
+            lblPrefix = new Label { AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
+            txtName = new TextBox { Width = 220, Text = defaultName };
+            txtName.TextChanged += (s, e) => UpdateFullName();
+            var namePanel = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
+            namePanel.Controls.Add(lblPrefix);
+            namePanel.Controls.Add(txtName);
+            lblFullName = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 6), MaximumSize = new Size(320, 0) };
+
+            txtDisplayName = new TextBox { Dock = DockStyle.Fill, Text = defaultDisplayName };
+            txtDisplayName.TextChanged += (s, e) => DisplayNameChanged?.Invoke(this, EventArgs.Empty);
+            txtDescription = new TextBox { Dock = DockStyle.Fill, Height = 48, Multiline = true, ScrollBars = ScrollBars.Vertical };
+
+            AddRow(table, "Solution:", cbSolution);
+            AddRow(table, string.Empty, lblSolutionStatus);
+            AddRow(table, "Name:", namePanel);
+            AddRow(table, string.Empty, lblFullName);
+            AddRow(table, "Display name:", txtDisplayName);
+            AddRow(table, "Description:", txtDescription);
+            Controls.Add(table);
+
+            UpdateFullName();
+        }
+
+        /// <summary>
+        /// Raised when the solution list loads or the selection changes, so the owner can enable Save.
+        /// </summary>
+        public event EventHandler StateChanged;
+
+        public event EventHandler DisplayNameChanged;
+
+        /// <summary>
+        /// Allowed file extensions; the first is appended to the name when it has none of them.
+        /// </summary>
+        public string[] Extensions
+        {
+            get { return extensions; }
+            set
+            {
+                extensions = value;
+                UpdateFullName();
+            }
+        }
+
+        public SolutionOption SelectedSolution
+        {
+            get { return cbSolution.SelectedItem as SolutionOption; }
+        }
+
+        public bool CanSave
+        {
+            get { return service != null && SelectedSolution != null; }
+        }
+
+        public string DisplayName
+        {
+            get { return txtDisplayName.Text.Trim(); }
+        }
+
+        public string Description
+        {
+            get { return txtDescription.Text.Trim(); }
+        }
+
+        /// <summary>
+        /// The full web resource name: publisher prefix + name + extension.
+        /// </summary>
+        public string FullName
+        {
+            get
+            {
+                var name = txtName.Text.Trim();
+                var solution = SelectedSolution;
+                if (solution != null && !string.IsNullOrEmpty(solution.Prefix) &&
+                    !name.StartsWith(solution.Prefix + "_", StringComparison.OrdinalIgnoreCase))
+                {
+                    name = solution.Prefix + "_" + name;
+                }
+
+                if (!extensions.Any(ext => name.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    name += extensions[0];
+                }
+
+                return name;
+            }
+        }
+
+        /// <summary>
+        /// Checks the name and fills in a missing display name. Returns false and
+        /// tells the user what's wrong if the name can't be used.
+        /// </summary>
+        public bool ValidateName(string caption)
+        {
+            var name = txtName.Text.Trim();
+            if (name.Length == 0)
+            {
+                ShowValidation("Enter a name for the web resource.", caption);
+                return false;
+            }
+
+            if (!ValidName.IsMatch(name))
+            {
+                ShowValidation("The name can only contain letters, numbers, underscores, hyphens, dots and forward slashes.", caption);
+                return false;
+            }
+
+            if (DisplayName.Length == 0)
+            {
+                txtDisplayName.Text = name.Split('/').Last();
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Points the box at a new connection (or none) and reloads the solution list.
+        /// </summary>
+        public void SetService(Microsoft.Xrm.Sdk.IOrganizationService newService)
+        {
+            service = newService;
+            if (solutionsRequested)
+            {
+                LoadSolutions();
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            // The handle can be re-created; load the solutions only the first time
+            if (!solutionsRequested)
+            {
+                solutionsRequested = true;
+                LoadSolutions();
+            }
+        }
+
+        private async void LoadSolutions()
+        {
+            cbSolution.Items.Clear();
+            OnStateChanged();
+
+            if (service == null)
+            {
+                lblSolutionStatus.Text = "Not connected to Dataverse. You can still create the " + noun + " and export it.";
+                cbSolution.Enabled = false;
+                UpdateFullName();
+                return;
+            }
+
+            var requested = service;
+            lblSolutionStatus.Text = "Loading solutions...";
+            cbSolution.Enabled = false;
+            try
+            {
+                var solutions = await Task.Run(() => new WebResourceRepository(requested).GetUnmanagedSolutions());
+                if (requested != service)
+                {
+                    // The connection changed while loading; a newer load is under way
+                    return;
+                }
+
+                cbSolution.Items.AddRange(solutions.Cast<object>().ToArray());
+                if (cbSolution.Items.Count > 0)
+                {
+                    cbSolution.SelectedIndex = 0;
+                }
+
+                cbSolution.Enabled = true;
+                lblSolutionStatus.Text = "The publisher prefix comes from the solution. The Default solution doesn't add the " + noun + " to a solution.";
+            }
+            catch (Exception ex)
+            {
+                lblSolutionStatus.Text = "Could not load solutions: " + ex.Message;
+            }
+
+            UpdateFullName();
+            OnStateChanged();
+        }
+
+        private void UpdateFullName()
+        {
+            var solution = SelectedSolution;
+            lblPrefix.Text = solution != null && !string.IsNullOrEmpty(solution.Prefix) ? solution.Prefix + "_" : string.Empty;
+            lblFullName.Text = txtName.Text.Trim().Length > 0 ? "Web resource name: " + FullName : string.Empty;
+        }
+
+        private void OnStateChanged()
+        {
+            StateChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void ShowValidation(string message, string caption)
+        {
+            MessageBox.Show(this, message, caption, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            txtName.Focus();
+        }
+
+        private static void AddRow(TableLayoutPanel table, string label, Control control)
+        {
+            var row = table.RowCount;
+            table.RowCount = row + 1;
+            table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            table.Controls.Add(new Label { Text = label, AutoSize = true, Margin = new Padding(3, 7, 3, 3) }, 0, row);
+            table.Controls.Add(control, 1, row);
+        }
+    }
+}

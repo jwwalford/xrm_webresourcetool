@@ -119,16 +119,16 @@ namespace WebResourceManager.Services
         }
 
         /// <summary>
-        /// Creates an HTML web resource, or updates the existing one when an id is
-        /// given, then adds it to the solution (unless it's the Default solution)
-        /// and publishes it. Returns the web resource id.
+        /// Creates a text web resource (HTML, CSS, ...), or updates the existing one
+        /// when an id is given, then adds it to the solution (unless it's the Default
+        /// solution) and publishes it. Returns the web resource id.
         /// </summary>
-        public Guid SaveHtml(Guid? existingId, string name, string displayName, string description, string html, string solutionUniqueName)
+        public Guid SaveText(Guid? existingId, string name, string displayName, string description, string text, WebResourceType type, string solutionUniqueName)
         {
             var entity = new Entity("webresource");
             entity["displayname"] = displayName;
             entity["description"] = description;
-            entity["content"] = EncodeText(html);
+            entity["content"] = EncodeText(text);
 
             Guid id;
             if (existingId.HasValue)
@@ -140,7 +140,7 @@ namespace WebResourceManager.Services
             else
             {
                 entity["name"] = name;
-                entity["webresourcetype"] = new OptionSetValue((int)WebResourceType.Html);
+                entity["webresourcetype"] = new OptionSetValue((int)type);
                 id = service.Create(entity);
             }
 
