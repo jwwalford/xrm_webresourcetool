@@ -18,7 +18,7 @@ namespace WebResourceManager
     /// </summary>
     internal class ToolsPanel : Panel
     {
-        private static readonly Color HeaderColor = Color.FromArgb(80, 0, 255);
+        private static readonly Color HeaderColor = Color.Black;
         private static readonly Color ButtonColor = Color.FromArgb(128, 128, 128);
         private static readonly Color ButtonHoverColor = Color.FromArgb(96, 96, 96);
         private static readonly Color ButtonDisabledColor = Color.FromArgb(200, 200, 200);
@@ -87,7 +87,7 @@ namespace WebResourceManager
             };
             button.FlatAppearance.BorderSize = 0;
             button.FlatAppearance.MouseOverBackColor = ButtonHoverColor;
-            button.FlatAppearance.MouseDownBackColor = HeaderColor;
+            button.FlatAppearance.MouseDownBackColor = Color.FromArgb(64, 64, 64);
 
             if (onClick != null)
             {

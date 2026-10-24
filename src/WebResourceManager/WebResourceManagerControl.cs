@@ -38,6 +38,12 @@ namespace WebResourceManager
         private ButtonDesignerPanel buttonDesigner;
         private bool loaded;
 
+        // Left panel width as a share of the control, remembered per tab: the
+        // tool buttons need less room than the explorer's list
+        private double toolsSplit = 0.3;
+        private double explorerSplit = 0.5;
+        private bool applyingSplit;
+
         public WebResourceManagerControl()
         {
             InitializeComponent();
@@ -84,6 +90,7 @@ namespace WebResourceManager
             scMain.Panel2.Controls.Add(pnlToolHost);
             pnlToolHost.BringToFront();
             tcLeft.SelectedIndexChanged += (s, e) => UpdateRightPanel();
+            scMain.SplitterMoved += ScMain_SplitterMoved;
 
             toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
             toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
@@ -163,6 +170,49 @@ namespace WebResourceManager
             tsPreview.Visible = !showTools;
             lblDetails.Visible = !showTools;
             scPreview.Visible = !showTools;
+            ApplySplit();
+        }
+
+        private void ApplySplit()
+        {
+            var ratio = tcLeft.SelectedTab == tpTools ? toolsSplit : explorerSplit;
+            var width = scMain.Width - scMain.SplitterWidth;
+            if (width <= 0)
+            {
+                return;
+            }
+
+            var distance = (int)(width * ratio);
+            distance = Math.Max(scMain.Panel1MinSize, Math.Min(distance, width - scMain.Panel2MinSize));
+
+            applyingSplit = true;
+            try
+            {
+                scMain.SplitterDistance = distance;
+            }
+            finally
+            {
+                applyingSplit = false;
+            }
+        }
+
+        private void ScMain_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+            // Remember where the user dragged it for the current tab
+            if (applyingSplit || scMain.Width <= scMain.SplitterWidth)
+            {
+                return;
+            }
+
+            var ratio = (double)scMain.SplitterDistance / (scMain.Width - scMain.SplitterWidth);
+            if (tcLeft.SelectedTab == tpTools)
+            {
+                toolsSplit = ratio;
+            }
+            else
+            {
+                explorerSplit = ratio;
+            }
         }
 
         private void WebResourceManagerControl_Load(object sender, EventArgs e)

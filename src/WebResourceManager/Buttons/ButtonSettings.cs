@@ -43,7 +43,7 @@ namespace WebResourceManager.Buttons
         public ButtonSettings()
         {
             Text = "Click me";
-            BackgroundColor = Color.FromArgb(0x00, 0x78, 0xD4);
+            BackgroundColor = Color.Black;
             TextColor = Color.White;
             IconColor = Color.White;
             Icon = BannerIcon.None;
