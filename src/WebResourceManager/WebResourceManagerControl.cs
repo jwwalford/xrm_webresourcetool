@@ -41,6 +41,8 @@ namespace WebResourceManager
         private Button btnIconTool;
         private SvgIconPanel svgIcon;
         private Button btnSvgTool;
+        private ImageUploadPanel imageUpload;
+        private Button btnUploadTool;
         private Button btnBannerTool;
         private Button btnButtonTool;
         private Button btnCustomCodeTool;
@@ -140,7 +142,7 @@ namespace WebResourceManager
             toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
             btnIconTool = toolsPanel.AddTool("Create an icon...", "Resize an image into icon sizes such as 16x16 and 32x32 and save the ones you pick as web resources", OpenIconGenerator);
             btnSvgTool = toolsPanel.AddTool("Create an SVG icon...", "Pick an icon from the gallery, set its colours, background and size and save it as an SVG web resource", OpenSvgIcon);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            btnUploadTool = toolsPanel.AddTool("Upload an image...", "Upload a PNG, JPG, GIF, BMP, ICO or SVG file as a web resource, converting or resizing it if needed", OpenImageUpload);
         }
 
         private static string WebViewDataFolder
@@ -202,6 +204,17 @@ namespace WebResourceManager
             }
 
             ShowTool(svgIcon, btnSvgTool);
+        }
+
+        private void OpenImageUpload()
+        {
+            if (imageUpload == null)
+            {
+                imageUpload = new ImageUploadPanel(Service, WebViewDataFolder);
+                imageUpload.Saved += Tool_Saved;
+            }
+
+            ShowTool(imageUpload, btnUploadTool);
         }
 
         /// <summary>
@@ -354,6 +367,7 @@ namespace WebResourceManager
             buttonDesigner?.SetService(newService);
             iconGenerator?.SetService(newService);
             svgIcon?.SetService(newService);
+            imageUpload?.SetService(newService);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)

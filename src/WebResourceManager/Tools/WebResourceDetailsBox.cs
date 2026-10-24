@@ -171,6 +171,15 @@ namespace WebResourceManager.Tools
         }
 
         /// <summary>
+        /// Replaces the name and display name, e.g. with a file's name when one is chosen.
+        /// </summary>
+        public void SetName(string name, string displayName)
+        {
+            txtName.Text = name;
+            txtDisplayName.Text = displayName;
+        }
+
+        /// <summary>
         /// Points the box at a new connection (or none) and reloads the solution list.
         /// </summary>
         public void SetService(Microsoft.Xrm.Sdk.IOrganizationService newService)

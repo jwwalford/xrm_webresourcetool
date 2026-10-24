@@ -34,8 +34,23 @@ namespace WebResourceManager.Tools
     internal static class WebResourcePublisher
     {
         /// <param name="what">How the content is described in the replace prompt, e.g. "this banner".</param>
-        public static async Task<SaveOutcome> SaveAsync(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
+        public static Task<SaveOutcome> SaveAsync(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
             WebResourceDetailsBox details, WebResourceType type, string content, string what, Action<string> reportStatus)
+        {
+            return SaveBase64Async(owner, caption, service, details, type, WebResourceRepository.EncodeText(content), what, reportStatus);
+        }
+
+        /// <summary>
+        /// As <see cref="SaveAsync"/>, for binary content such as images.
+        /// </summary>
+        public static Task<SaveOutcome> SaveBytesAsync(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
+            WebResourceDetailsBox details, WebResourceType type, byte[] content, string what, Action<string> reportStatus)
+        {
+            return SaveBase64Async(owner, caption, service, details, type, Convert.ToBase64String(content), what, reportStatus);
+        }
+
+        private static async Task<SaveOutcome> SaveBase64Async(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
+            WebResourceDetailsBox details, WebResourceType type, string base64Content, string what, Action<string> reportStatus)
         {
             var name = details.FullName;
             var displayName = details.DisplayName;
@@ -64,7 +79,7 @@ namespace WebResourceManager.Tools
 
             reportStatus("Saving and publishing...");
             var existingId = existing != null ? existing.Id : (Guid?)null;
-            await Task.Run(() => repository.SaveText(existingId, name, displayName, description, content, type, solution.UniqueName));
+            await Task.Run(() => repository.SaveContent(existingId, name, displayName, description, base64Content, type, solution.UniqueName));
 
             return existing != null ? SaveOutcome.Updated : SaveOutcome.Created;
         }
