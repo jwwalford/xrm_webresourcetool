@@ -19,10 +19,17 @@ namespace WebResourceManager.Tools
         // Web resource names allow letters, digits, underscore, hyphen, dot and forward slash
         private static readonly Regex ValidName = new Regex(@"^[A-Za-z0-9_\-\./]+$");
 
+        // Runs of anything but letters and digits become one underscore in a generated name
+        private static readonly Regex NonNameChars = new Regex(@"[^a-z0-9]+");
+
         private readonly string noun;
         private Microsoft.Xrm.Sdk.IOrganizationService service;
         private string[] extensions = { ".html", ".htm" };
         private bool solutionsRequested;
+
+        // The name follows the display name until the user types in the name box
+        private bool nameFollowsDisplayName = true;
+        private bool settingName;
 
         private readonly ComboBox cbSolution;
         private readonly Label lblSolutionStatus;
@@ -52,14 +59,29 @@ namespace WebResourceManager.Tools
 
             lblPrefix = new Label { AutoSize = true, Margin = new Padding(3, 6, 0, 3), Font = new Font("Segoe UI", 9F, FontStyle.Bold) };
             txtName = new TextBox { Width = 220, Text = defaultName };
-            txtName.TextChanged += (s, e) => UpdateFullName();
+            txtName.TextChanged += (s, e) =>
+            {
+                if (!settingName)
+                {
+                    // Typing a name by hand stops it following the display name; clearing it starts again
+                    nameFollowsDisplayName = txtName.Text.Trim().Length == 0;
+                }
+                UpdateFullName();
+            };
             var namePanel = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
             namePanel.Controls.Add(lblPrefix);
             namePanel.Controls.Add(txtName);
             lblFullName = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 0, 3, 6), MaximumSize = new Size(320, 0) };
 
             txtDisplayName = new TextBox { Dock = DockStyle.Fill, Text = defaultDisplayName };
-            txtDisplayName.TextChanged += (s, e) => DisplayNameChanged?.Invoke(this, EventArgs.Empty);
+            txtDisplayName.TextChanged += (s, e) =>
+            {
+                if (nameFollowsDisplayName)
+                {
+                    NameFromDisplayName();
+                }
+                DisplayNameChanged?.Invoke(this, EventArgs.Empty);
+            };
             txtDescription = new TextBox { Dock = DockStyle.Fill, Height = 48, Multiline = true, ScrollBars = ScrollBars.Vertical };
 
             AddRow(table, "Solution:", cbSolution);
@@ -175,8 +197,39 @@ namespace WebResourceManager.Tools
         /// </summary>
         public void SetName(string name, string displayName)
         {
-            txtName.Text = name;
+            SetNameText(name);
+            nameFollowsDisplayName = true;
             txtDisplayName.Text = displayName;
+        }
+
+        /// <summary>
+        /// Turns the display name into the last part of the name, keeping any folder:
+        /// "Form Banner" becomes "banners/form_banner".
+        /// </summary>
+        private void NameFromDisplayName()
+        {
+            var slug = NonNameChars.Replace(txtDisplayName.Text.Trim().ToLowerInvariant(), "_").Trim('_');
+            if (slug.Length == 0)
+            {
+                return;
+            }
+
+            var current = txtName.Text.Trim();
+            var slash = current.LastIndexOf('/');
+            SetNameText(slash >= 0 ? current.Substring(0, slash + 1) + slug : slug);
+        }
+
+        private void SetNameText(string name)
+        {
+            settingName = true;
+            try
+            {
+                txtName.Text = name;
+            }
+            finally
+            {
+                settingName = false;
+            }
         }
 
         /// <summary>

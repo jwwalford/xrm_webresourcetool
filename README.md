@@ -47,7 +47,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Size**: original, or resize to a width and height with proportions kept. **JPG quality** and the fill colour for transparent areas apply when saving as JPG.
   - **Result** shows the format, size and file size, and warns above Dataverse's default 5 MB limit. The preview shows the image at actual size on a checkerboard and a dark background.
 - **Create a banner...** (Tools tab): a single-page designer for form banners (an HTML web resource with a coloured bar, an icon and a line of text), shown in the right panel.
-  - **Web resource**: pick a solution (its publisher prefix is added to the name), then enter the name, display name and description.
+  - **Web resource**: pick a solution (its publisher prefix is added to the name), then enter the name, display name and description. Typing a display name fills in the name in lowercase with underscores ("Form Banner" becomes `form_banner`, keeping any folder such as `banners/`) until you edit the name yourself; this works the same on every tool page.
   - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour (white outline by default). Pick from 36 icons in the clickable gallery, grouped into General, Law, Accounting and Sales. A live preview updates as you change things.
   - **Save to Dataverse** creates the web resource (or replaces an existing HTML one after confirming), adds it to the chosen solution and publishes it.
   - **Export HTML...** saves the same HTML file to disk. This works without a connection.
