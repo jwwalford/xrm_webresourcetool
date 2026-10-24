@@ -32,6 +32,7 @@ namespace WebResourceManager
         private Panel pnlToolHost;
         private Label lblPickTool;
         private BannerDesignerPanel bannerDesigner;
+        private bool loaded;
 
         public WebResourceManagerControl()
         {
@@ -43,6 +44,8 @@ namespace WebResourceManager
             tscbType.ComboBox.DrawMode = DrawMode.OwnerDrawFixed;
             tscbType.ComboBox.ItemHeight = TypeIcons.BadgeSize.Height + 2;
             tscbType.ComboBox.DrawItem += tscbType_DrawItem;
+            tscbType.Items.AddRange(WebResourceTypeFilter.Defaults().Cast<object>().ToArray());
+            tscbType.SelectedIndex = 0;
             tslPreviewTitle.ImageScaling = ToolStripItemImageScaling.None;
 
             codeView = new Scintilla
@@ -115,12 +118,14 @@ namespace WebResourceManager
 
         private void WebResourceManagerControl_Load(object sender, EventArgs e)
         {
-            foreach (var filter in WebResourceTypeFilter.Defaults())
+            // Load can fire again when XrmToolBox re-creates the control's handle,
+            // which used to add the type filters a second time
+            if (loaded)
             {
-                tscbType.Items.Add(filter);
+                return;
             }
-            tscbType.SelectedIndex = 0;
 
+            loaded = true;
             InitializeBrowser();
             UpdateRightPanel();
         }

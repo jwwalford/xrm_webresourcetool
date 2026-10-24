@@ -33,6 +33,7 @@ namespace WebResourceManager.Banners
         private Microsoft.Xrm.Sdk.IOrganizationService service;
         private bool previewReady;
         private bool galleryReady;
+        private bool loaded;
         private string lastGalleryHtml;
 
         private Button btnExport;
@@ -389,6 +390,13 @@ namespace WebResourceManager.Banners
 
         private void BannerDesignerPanel_Load(object sender, EventArgs e)
         {
+            // Load can fire again if the handle is re-created; set up only once
+            if (loaded)
+            {
+                return;
+            }
+
+            loaded = true;
             InitializeWebViews();
             LoadSolutions();
         }
