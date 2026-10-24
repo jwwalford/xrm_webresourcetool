@@ -17,6 +17,11 @@
     <Authors>Jono</Authors>
     <Description>Assisted Web Resource Generator: generate HTML/CSS and image web resources for Dataverse.</Description>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <!-- dotnet pack builds the XrmToolBox Tool Library package from the nuspec; the
+         package version is the assembly version of the same build, as the store requires -->
+    <NuspecFile>webresource_generator.nuspec</NuspecFile>
+    <NuspecProperties>version=$(AssemblyVersion);configuration=$(Configuration)</NuspecProperties>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\..\artifacts</PackageOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
