@@ -107,15 +107,7 @@ namespace WebResourceManager.Buttons
 
         private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
-            header.Controls.Add(new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 20,
-                ForeColor = Color.DimGray,
-                Text = "Style the button, pick an icon and choose what it does. Save creates the HTML web resource in Dataverse; Export saves the file."
-            });
-            header.Controls.Add(ActionIcons.ToolTitle(Caption, ActionIcons.ToolButton));
+            var header = ActionIcons.ToolHeader(Caption, "Style the button, pick an icon and choose what it does. Save creates the HTML web resource in Dataverse; Export saves the file.", ActionIcons.ToolButton);
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 

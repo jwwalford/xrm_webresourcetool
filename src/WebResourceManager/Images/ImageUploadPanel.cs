@@ -114,15 +114,7 @@ namespace WebResourceManager.Images
 
         private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
-            header.Controls.Add(new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 20,
-                ForeColor = Color.DimGray,
-                Text = "Choose an image file, adjust its format and size if you need to, and save it as a web resource. Export saves the converted file."
-            });
-            header.Controls.Add(ActionIcons.ToolTitle(Caption, ActionIcons.ToolUpload));
+            var header = ActionIcons.ToolHeader(Caption, "Choose an image file, adjust its format and size if you need to, and save it as a web resource. Export saves the converted file.", ActionIcons.ToolUpload);
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 

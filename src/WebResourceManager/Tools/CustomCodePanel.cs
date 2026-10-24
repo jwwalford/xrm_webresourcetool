@@ -110,15 +110,7 @@ h1 {
 
         private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
-            header.Controls.Add(new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 20,
-                ForeColor = Color.DimGray,
-                Text = "Write HTML or CSS and watch the preview update. Save creates the web resource in Dataverse; Export saves the file."
-            });
-            header.Controls.Add(ActionIcons.ToolTitle(Caption, ActionIcons.ToolCode));
+            var header = ActionIcons.ToolHeader(Caption, "Write HTML or CSS and watch the preview update. Save creates the web resource in Dataverse; Export saves the file.", ActionIcons.ToolCode);
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 

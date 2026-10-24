@@ -87,15 +87,7 @@ namespace WebResourceManager.Images
 
         private void BuildLayout()
         {
-            var header = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Color.White, Padding = new Padding(12, 6, 12, 4) };
-            header.Controls.Add(new Label
-            {
-                Dock = DockStyle.Top,
-                Height = 20,
-                ForeColor = Color.DimGray,
-                Text = "Pick an icon, set its colours and size, and save it as an SVG web resource. Export saves the .svg file."
-            });
-            header.Controls.Add(ActionIcons.ToolTitle(Caption, ActionIcons.ToolSvg));
+            var header = ActionIcons.ToolHeader(Caption, "Pick an icon, set its colours and size, and save it as an SVG web resource. Export saves the .svg file.", ActionIcons.ToolSvg);
 
             var divider = new Label { Dock = DockStyle.Top, Height = 1, BackColor = Color.LightGray };
 
