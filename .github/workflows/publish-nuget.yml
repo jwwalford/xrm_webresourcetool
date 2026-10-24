@@ -1,0 +1,49 @@
+# Builds the XrmToolBox plugin package and publishes it to nuget.org with
+# Trusted Publishing: GitHub issues a short-lived OIDC token, NuGet/login swaps
+# it for a one-hour API key, so no API key is stored in the repository.
+#
+# Runs when a GitHub release is published, or by hand from the Actions tab.
+# Needs a Trusted Publishing policy on nuget.org for this repository and the
+# workflow file publish-nuget.yml, and a NUGET_USER secret holding the
+# nuget.org profile name (not the email address).
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # lets the job request the OIDC token for NuGet/login
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Builds the plugin and writes artifacts/webresource_generator.<version>.nupkg;
+      # the package version is the assembly version of this build
+      - name: Pack
+        run: dotnet pack src/WebResourceManager/WebResourceManager.csproj -c Release
+
+      - name: Keep the package with the run
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+
+      # Requested just before the push, as the key is only valid for an hour
+      - name: NuGet login (OIDC to temporary API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to nuget.org
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
