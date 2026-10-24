@@ -8,8 +8,11 @@ using McTools.Xrm.Connection;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using ScintillaNET;
+using WebResourceManager.Banners;
+using WebResourceManager.Buttons;
 using WebResourceManager.Models;
 using WebResourceManager.Services;
+using WebResourceManager.Tools;
 using XrmToolBox.Extensibility;
 
 namespace WebResourceManager
@@ -27,23 +30,47 @@ namespace WebResourceManager
         private bool browserReady;
         private string pendingHtml;
         private string tempFolder;
+        private readonly ImageList typeIcons = TypeIcons.CreateImageList();
+        private Panel pnlToolHost;
+        private Label lblPickTool;
+        private BannerDesignerPanel bannerDesigner;
+        private CustomCodePanel customCode;
+        private ButtonDesignerPanel buttonDesigner;
+        private Button btnBannerTool;
+        private Button btnButtonTool;
+        private Button btnCustomCodeTool;
+        private bool loaded;
+
+        // Left panel width as a share of the control, remembered per tab: the
+        // tool buttons need less room than the explorer's list
+        private double toolsSplit = 0.3;
+        private double explorerSplit = 0.5;
+        private bool applyingSplit;
 
         public WebResourceManagerControl()
         {
             InitializeComponent();
 
             lvWebResources.ListViewItemSorter = sorter;
+            lvWebResources.SmallImageList = typeIcons;
+
+            tscbType.ComboBox.DrawMode = DrawMode.OwnerDrawFixed;
+            tscbType.ComboBox.ItemHeight = TypeIcons.BadgeSize.Height + 2;
+            tscbType.ComboBox.DrawItem += tscbType_DrawItem;
+            tscbType.Items.AddRange(WebResourceTypeFilter.Defaults().Cast<object>().ToArray());
+            tscbType.SelectedIndex = 0;
+            tslPreviewTitle.ImageScaling = ToolStripItemImageScaling.None;
 
             codeView = new Scintilla
             {
                 Dock = DockStyle.Fill,
-                Visible = false,
                 ReadOnly = true,
                 WrapMode = WrapMode.None,
                 BorderStyle = BorderStyle.None
             };
             codeView.Margins[0].Width = 40;
-            pnlPreview.Controls.Add(codeView);
+            scPreview.Panel2.Controls.Add(codeView);
+            scPreview.Panel2Collapsed = true;
 
             browser = new WebView2
             {
@@ -51,17 +78,177 @@ namespace WebResourceManager
                 Visible = false
             };
             pnlPreview.Controls.Add(browser);
+
+            // Tools open in the right panel while the Tools tab is active; the
+            // explorer's preview takes the panel back on the Resource explorer tab
+            lblPickTool = new Label
+            {
+                Dock = DockStyle.Fill,
+                ForeColor = SystemColors.GrayText,
+                Text = "Pick a tool on the left to start.",
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            pnlToolHost = new Panel { Dock = DockStyle.Fill };
+            pnlToolHost.Controls.Add(lblPickTool);
+            scMain.Panel2.Controls.Add(pnlToolHost);
+            pnlToolHost.BringToFront();
+            tcLeft.SelectedIndexChanged += (s, e) => UpdateRightPanel();
+
+            // Footer on the Tools tab that jumps to the explorer
+            var btnGoToExplorer = new Button
+            {
+                Text = "Resource explorer  \u2192",
+                Dock = DockStyle.Bottom,
+                Height = 44,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.Black,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 12f, FontStyle.Regular),
+                Cursor = Cursors.Hand,
+                UseVisualStyleBackColor = false
+            };
+            btnGoToExplorer.FlatAppearance.BorderSize = 0;
+            btnGoToExplorer.FlatAppearance.MouseOverBackColor = Color.FromArgb(48, 48, 48);
+            btnGoToExplorer.Click += (s, e) => tcLeft.SelectedTab = tpExplorer;
+            tpTools.Controls.Add(btnGoToExplorer);
+            scMain.SplitterMoved += ScMain_SplitterMoved;
+
+            toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
+            btnBannerTool = toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
+            btnButtonTool = toolsPanel.AddTool("Create a button...", "Design a form button with an icon and a click action, and save it as an HTML web resource", OpenButtonDesigner);
+            btnCustomCodeTool = toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
+            toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+        }
+
+        private static string WebViewDataFolder
+        {
+            get { return Path.Combine(Path.GetTempPath(), "XrmToolBox.WebResourceManager", "WebView2"); }
+        }
+
+        private void OpenBannerWizard()
+        {
+            if (bannerDesigner == null)
+            {
+                // Not connected is fine: the designer can still design and export to disk
+                bannerDesigner = new BannerDesignerPanel(Service, WebViewDataFolder);
+                bannerDesigner.Saved += Tool_Saved;
+            }
+
+            ShowTool(bannerDesigner, btnBannerTool);
+        }
+
+        private void OpenButtonDesigner()
+        {
+            if (buttonDesigner == null)
+            {
+                buttonDesigner = new ButtonDesignerPanel(Service, WebViewDataFolder);
+                buttonDesigner.Saved += Tool_Saved;
+            }
+
+            ShowTool(buttonDesigner, btnButtonTool);
+        }
+
+        private void OpenCustomCode()
+        {
+            if (customCode == null)
+            {
+                customCode = new CustomCodePanel(Service, WebViewDataFolder);
+                customCode.Saved += Tool_Saved;
+            }
+
+            ShowTool(customCode, btnCustomCodeTool);
+        }
+
+        /// <summary>
+        /// Shows a tool in the right panel. Tools are kept once opened, so switching
+        /// between them keeps what the user has entered.
+        /// </summary>
+        private void ShowTool(Control tool, Button toolButton)
+        {
+            toolsPanel.SetActive(toolButton);
+            if (tool.Parent != pnlToolHost)
+            {
+                tool.Dock = DockStyle.Fill;
+                pnlToolHost.Controls.Add(tool);
+            }
+
+            tool.BringToFront();
+            tcLeft.SelectedTab = tpTools;
+            UpdateRightPanel();
+        }
+
+        private void Tool_Saved(object sender, string name)
+        {
+            tsslCount.Text = "Saved " + name + ". Load web resources to see it in the list.";
+        }
+
+        private void UpdateRightPanel()
+        {
+            var showTools = tcLeft.SelectedTab == tpTools;
+            pnlToolHost.Visible = showTools;
+            tsPreview.Visible = !showTools;
+            lblDetails.Visible = !showTools;
+            scPreview.Visible = !showTools;
+            ApplySplit();
+        }
+
+        private void ApplySplit()
+        {
+            var ratio = tcLeft.SelectedTab == tpTools ? toolsSplit : explorerSplit;
+            var width = scMain.Width - scMain.SplitterWidth;
+            if (width <= 0)
+            {
+                return;
+            }
+
+            var distance = (int)(width * ratio);
+            distance = Math.Max(scMain.Panel1MinSize, Math.Min(distance, width - scMain.Panel2MinSize));
+
+            applyingSplit = true;
+            try
+            {
+                scMain.SplitterDistance = distance;
+            }
+            finally
+            {
+                applyingSplit = false;
+            }
+        }
+
+        private void ScMain_SplitterMoved(object sender, SplitterEventArgs e)
+        {
+            // Remember where the user dragged it for the current tab
+            if (applyingSplit || scMain.Width <= scMain.SplitterWidth)
+            {
+                return;
+            }
+
+            var ratio = (double)scMain.SplitterDistance / (scMain.Width - scMain.SplitterWidth);
+            if (tcLeft.SelectedTab == tpTools)
+            {
+                toolsSplit = ratio;
+            }
+            else
+            {
+                explorerSplit = ratio;
+            }
         }
 
         private void WebResourceManagerControl_Load(object sender, EventArgs e)
         {
-            foreach (var filter in WebResourceTypeFilter.Defaults())
+            // Load can fire again when XrmToolBox re-creates the control's handle,
+            // which used to add the type filters a second time
+            if (loaded)
             {
-                tscbType.Items.Add(filter);
+                return;
             }
-            tscbType.SelectedIndex = 0;
 
+            loaded = true;
             InitializeBrowser();
+            UpdateRightPanel();
         }
 
         private async void InitializeBrowser()
@@ -110,6 +297,9 @@ namespace WebResourceManager
             lvWebResources.Items.Clear();
             ClearPreview();
             tsslCount.Text = "Connected to " + detail?.ConnectionName + ". Pick a type and click Load web resources.";
+            bannerDesigner?.SetService(newService);
+            customCode?.SetService(newService);
+            buttonDesigner?.SetService(newService);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)
@@ -119,6 +309,7 @@ namespace WebResourceManager
 
         private void tsbLoad_Click(object sender, EventArgs e)
         {
+            tcLeft.SelectedTab = tpExplorer;
             ExecuteMethod(LoadWebResources);
         }
 
@@ -178,9 +369,31 @@ namespace WebResourceManager
             return value != null && value.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
+        private void tscbType_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+            if (e.Index < 0)
+            {
+                return;
+            }
+
+            var filter = (WebResourceTypeFilter)tscbType.Items[e.Index];
+            var iconBounds = new Rectangle(e.Bounds.Left + 2, e.Bounds.Top + (e.Bounds.Height - TypeIcons.BadgeSize.Height) / 2, TypeIcons.BadgeSize.Width, TypeIcons.BadgeSize.Height);
+
+            // Only single-type entries get a badge; "All types" and "All images" stay text-only
+            if (filter.Types.Length == 1)
+            {
+                e.Graphics.DrawImage(typeIcons.Images[TypeIcons.Key(filter.Types[0])], iconBounds);
+            }
+
+            var textBounds = new Rectangle(iconBounds.Right + 4, e.Bounds.Top, e.Bounds.Right - iconBounds.Right - 4, e.Bounds.Height);
+            TextRenderer.DrawText(e.Graphics, filter.Label, e.Font, textBounds, e.ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
+            e.DrawFocusRectangle();
+        }
+
         private static ListViewItem ToListViewItem(WebResourceItem item)
         {
-            var lvi = new ListViewItem(item.Name) { Tag = item };
+            var lvi = new ListViewItem(item.Name) { Tag = item, ImageKey = TypeIcons.Key(item.Type) };
             lvi.SubItems.Add(item.DisplayName ?? string.Empty);
             lvi.SubItems.Add(item.TypeLabel);
             lvi.SubItems.Add(item.IsManaged ? "Yes" : "No");
@@ -190,6 +403,11 @@ namespace WebResourceManager
 
         private void tstSearch_TextChanged(object sender, EventArgs e)
         {
+            if (tstSearch.Text.Length > 0)
+            {
+                tcLeft.SelectedTab = tpExplorer;
+            }
+
             PopulateList();
         }
 
@@ -265,6 +483,7 @@ namespace WebResourceManager
         private void ShowDetails(WebResourceItem item)
         {
             tslPreviewTitle.Text = item.Name;
+            tslPreviewTitle.Image = typeIcons.Images[TypeIcons.Key(item.Type)];
             var details = string.Format("{0}  |  {1}  |  Modified {2}{3}",
                 item.TypeLabel,
                 item.IsManaged ? "Managed" : "Unmanaged",
@@ -279,10 +498,12 @@ namespace WebResourceManager
             lblDetails.Text = details;
         }
 
+        /// <summary>
+        /// Fills the live preview (top) and the code preview (bottom). Raster images
+        /// have no code, so the bottom pane is collapsed for them.
+        /// </summary>
         private void ShowPreview(WebResourceItem item)
         {
-            tsbViewSource.Visible = item.PreviewKind == PreviewKind.Browser;
-
             if (string.IsNullOrEmpty(item.Content))
             {
                 ShowNoPreview("This web resource has no content.");
@@ -291,26 +512,27 @@ namespace WebResourceManager
 
             try
             {
-                switch (item.PreviewKind)
+                switch (item.Type)
                 {
-                    case PreviewKind.Image:
+                    case WebResourceType.Png:
+                    case WebResourceType.Jpg:
+                    case WebResourceType.Gif:
+                    case WebResourceType.Ico:
                         ShowImage(item);
+                        ShowCode(null);
                         break;
-                    case PreviewKind.Browser:
-                        if (tsbViewSource.Checked)
-                        {
-                            ShowCode(item);
-                        }
-                        else
-                        {
-                            ShowBrowser(item);
-                        }
-                        break;
-                    case PreviewKind.Text:
+                    case WebResourceType.Html:
+                    case WebResourceType.Svg:
+                    case WebResourceType.Css:
+                        ShowBrowser(item);
                         ShowCode(item);
                         break;
                     default:
-                        ShowNoPreview(item.TypeLabel + " web resources can't be previewed. Use Save to disk to inspect it.");
+                        // Fallback: the explorer only lists HTML, CSS and images
+                        ShowNoPreviewMessage(item.PreviewKind == PreviewKind.Text
+                            ? "No live preview for " + item.TypeLabel + "."
+                            : item.TypeLabel + " web resources can't be previewed. Use Save to disk to inspect it.");
+                        ShowCode(item.PreviewKind == PreviewKind.Text ? item : null);
                         break;
                 }
             }
@@ -349,7 +571,7 @@ namespace WebResourceManager
 
             lblDetails.Text += string.Format("  |  {0} x {1} px, {2:N1} KB", image.Width, image.Height, bytes.Length / 1024.0);
             UpdateImageSizeMode();
-            ShowOnly(pbImage);
+            ShowLive(pbImage);
         }
 
         private void pbImage_Resize(object sender, EventArgs e)
@@ -374,11 +596,21 @@ namespace WebResourceManager
         private void ShowBrowser(WebResourceItem item)
         {
             var text = WebResourceRepository.DecodeText(item.Content);
-            var html = item.Type == WebResourceType.Svg
-                ? "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>html,body{margin:0;height:100%;display:flex;align-items:center;justify-content:center;background:#fff}svg{max-width:100%;max-height:100%}</style></head><body>" + text + "</body></html>"
-                : text;
+            string html;
+            switch (item.Type)
+            {
+                case WebResourceType.Svg:
+                    html = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>html,body{margin:0;height:100%;display:flex;align-items:center;justify-content:center;background:#fff}svg{max-width:100%;max-height:100%}</style></head><body>" + text + "</body></html>";
+                    break;
+                case WebResourceType.Css:
+                    html = CssSamplePage.Build(text);
+                    break;
+                default:
+                    html = text;
+                    break;
+            }
 
-            ShowOnly(browser);
+            ShowLive(browser);
 
             if (!browserReady)
             {
@@ -410,22 +642,21 @@ namespace WebResourceManager
             }
 
             browser.CoreWebView2.Settings.IsScriptEnabled = tsmiRunScripts.Checked;
-            if (current != null && current.PreviewKind == PreviewKind.Browser && !tsbViewSource.Checked)
+            if (current != null && current.Content != null && browser.Visible)
             {
                 ShowPreview(current);
             }
         }
 
-        private void tsbViewSource_CheckedChanged(object sender, EventArgs e)
-        {
-            if (current != null && current.Content != null)
-            {
-                ShowPreview(current);
-            }
-        }
-
+        /// <param name="item">Null collapses the code pane.</param>
         private void ShowCode(WebResourceItem item)
         {
+            scPreview.Panel2Collapsed = item == null;
+            if (item == null)
+            {
+                return;
+            }
+
             CodeStyler.Apply(codeView, item.Type);
 
             codeView.ReadOnly = false;
@@ -437,29 +668,36 @@ namespace WebResourceManager
             // Widen the line number margin to fit the line count
             var digits = codeView.Lines.Count.ToString().Length;
             codeView.Margins[0].Width = codeView.TextWidth(Style.LineNumber, new string('9', digits + 1)) + 4;
-
-            ShowOnly(codeView);
         }
 
+        /// <summary>
+        /// Shows a message in place of the live preview and hides the code pane.
+        /// </summary>
         private void ShowNoPreview(string message)
         {
+            ShowNoPreviewMessage(message);
+            ShowCode(null);
+        }
+
+        private void ShowNoPreviewMessage(string message)
+        {
             lblNoPreview.Text = message;
-            ShowOnly(lblNoPreview);
+            ShowLive(lblNoPreview);
         }
 
         private void ClearPreview()
         {
             current = null;
             tsbSave.Enabled = false;
-            tsbViewSource.Visible = false;
             tslPreviewTitle.Text = "Preview";
+            tslPreviewTitle.Image = null;
             lblDetails.Text = string.Empty;
             ShowNoPreview("Select a web resource to preview it.");
         }
 
-        private void ShowOnly(Control control)
+        private void ShowLive(Control control)
         {
-            foreach (var view in new Control[] { lblNoPreview, pbImage, codeView, browser })
+            foreach (var view in new Control[] { lblNoPreview, pbImage, browser })
             {
                 view.Visible = view == control;
             }

@@ -5,13 +5,13 @@ using XrmToolBox.Extensibility.Interfaces;
 namespace WebResourceManager
 {
     [Export(typeof(IXrmToolBoxPlugin)),
-        ExportMetadata("Name", "Web Resource Manager"),
-        ExportMetadata("Description", "Browse web resources by type and preview images, HTML, SVG, scripts and other text content."),
+        ExportMetadata("Name", "Assisted Web Resource Generator"),
+        ExportMetadata("Description", "Generate HTML/CSS and image web resources: design form banners and buttons, write custom HTML/CSS with a live preview, and browse existing web resources."),
         ExportMetadata("SmallImageBase64", PluginIcons.Small),
         ExportMetadata("BigImageBase64", PluginIcons.Big),
-        ExportMetadata("BackgroundColor", "Lavender"),
-        ExportMetadata("PrimaryFontColor", "Black"),
-        ExportMetadata("SecondaryFontColor", "Gray")]
+        ExportMetadata("BackgroundColor", "Black"),
+        ExportMetadata("PrimaryFontColor", "White"),
+        ExportMetadata("SecondaryFontColor", "LightGray")]
     public class Plugin : PluginBase
     {
         public override IXrmToolBoxPluginControl GetControl()
