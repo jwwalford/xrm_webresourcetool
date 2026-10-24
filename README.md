@@ -72,7 +72,16 @@ This builds the plugin and writes `artifacts/webresource_generator.<version>.nup
 - Depends on `XrmToolBox` 1.2025.10.74 (the version the plugin is built against), not `XrmToolBoxPackage`.
 - Contains only `lib/net48/Plugins/webresource_generator.dll`, plus the icon.
 
-Update the release notes in the nuspec before each release. To publish, push the package to nuget.org with your own API key:
+Update the release notes in the nuspec before each release.
+
+### Publishing from GitHub (Trusted Publishing)
+
+`.github/workflows/publish-nuget.yml` packs the plugin and pushes it to nuget.org when a GitHub release is published, or when run by hand from the Actions tab. It uses NuGet Trusted Publishing, so no API key is stored: GitHub gives the job a short-lived token and `NuGet/login` exchanges it for a one-hour key. One-off setup:
+
+1. On nuget.org, open your user menu > **Trusted Publishing** and add a policy with Repository Owner `jwwalford`, Repository `xrm_webresourcetool` and Workflow File `publish-nuget.yml`. Leave Environment empty.
+2. In the GitHub repository, add an Actions secret `NUGET_USER` with your nuget.org profile name (not your email address).
+
+To publish by hand instead, push the package with your own API key:
 
 ```
 dotnet nuget push artifacts/webresource_generator.<version>.nupkg --api-key <your key> --source https://api.nuget.org/v3/index.json
