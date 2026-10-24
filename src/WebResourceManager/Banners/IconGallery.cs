@@ -13,7 +13,8 @@ namespace WebResourceManager.Banners
     internal static class IconGallery
     {
         /// <summary>
-        /// Builds the grid, drawn in the current colours so it previews the result.
+        /// Builds the grid: black line icons on light grey tiles, with only the
+        /// selected tile drawn in the chosen colours so it previews the result.
         /// The "None" choice is left out when includeNone is false.
         /// </summary>
         public static string BuildHtml(BannerIcon selectedIcon, bool filled, Color background, Color text, Color iconColor, bool includeNone = true)
@@ -22,10 +23,10 @@ namespace WebResourceManager.Banners
             html.Append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>");
             html.Append("body{margin:0;padding:6px;font-family:'Segoe UI',sans-serif;font-size:11px;background:#fff}");
             html.Append(".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}");
-            html.AppendFormat("button{{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:2px solid transparent;border-radius:6px;background:{0};color:{1};cursor:pointer;font:inherit}}",
-                BannerHtmlBuilder.ToHex(background), BannerHtmlBuilder.ToHex(text));
-            html.Append("button:hover{border-color:#8a8886}button.selected{border-color:#0078d4;box-shadow:0 0 0 2px #c7e0f4}");
-            html.AppendFormat("button svg{{color:{0}}}", BannerHtmlBuilder.ToHex(iconColor));
+            html.Append("button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border:2px solid transparent;border-radius:6px;background:#f3f2f1;color:#323130;cursor:pointer;font:inherit}");
+            html.Append("button svg{color:#000}button:hover{border-color:#8a8886}");
+            html.AppendFormat("button.selected{{border-color:#0078d4;box-shadow:0 0 0 2px #c7e0f4;background:{0};color:{1}}}button.selected svg{{color:{2}}}",
+                BannerHtmlBuilder.ToHex(background), BannerHtmlBuilder.ToHex(text), BannerHtmlBuilder.ToHex(iconColor));
             html.Append(".none{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:.6}");
             html.Append("h4{margin:8px 2px 4px;font-size:11px;font-weight:600;color:#605e5c;text-transform:uppercase;letter-spacing:.04em}h4:first-child{margin-top:0}");
             html.Append("</style></head><body>");
@@ -41,7 +42,7 @@ namespace WebResourceManager.Banners
                         selected ? " class=\"selected\"" : string.Empty, WebUtility.HtmlEncode(icon.Label), icon.Key);
                     html.Append(string.IsNullOrEmpty(icon.Markup)
                         ? "<span class=\"none\">&#8856;</span>"
-                        : BannerHtmlBuilder.BuildSvg(icon, filled, 28));
+                        : BannerHtmlBuilder.BuildSvg(icon, filled && selected, 28));
                     html.AppendFormat("<span>{0}</span></button>", WebUtility.HtmlEncode(icon == BannerIcon.None ? "None" : icon.Label));
                 }
 

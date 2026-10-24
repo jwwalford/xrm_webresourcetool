@@ -19,7 +19,7 @@ namespace WebResourceManager
     /// </summary>
     internal class ToolsPanel : Panel
     {
-        private static readonly Color HeaderColor = Color.Black;
+        private static readonly Color HeaderColor = Color.FromArgb(0x00, 0x7A, 0xCC);
         private static readonly Color ButtonColor = Color.FromArgb(128, 128, 128);
         private static readonly Color ButtonHoverColor = Color.FromArgb(96, 96, 96);
         private static readonly Color ButtonDisabledColor = Color.FromArgb(200, 200, 200);

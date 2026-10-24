@@ -272,7 +272,7 @@ namespace WebResourceManager.Images
 
             if (galleryReady)
             {
-                // Gallery tiles take the background colour when there is one, so the choice previews in place
+                // The selected tile takes the background colour when there is one, so the choice previews in place
                 var tile = settings.Background != SvgIconBackground.None ? settings.BackgroundColor : Color.FromArgb(0xF3, 0xF2, 0xF1);
                 var html = IconGallery.BuildHtml(settings.Icon, settings.Filled, tile, Color.FromArgb(0x32, 0x31, 0x30), settings.IconColor, false);
                 if (html != lastGalleryHtml)

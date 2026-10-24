@@ -116,14 +116,14 @@ namespace WebResourceManager
                 Dock = DockStyle.Bottom,
                 Height = 44,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = Color.Black,
+                BackColor = Color.FromArgb(0x00, 0x7A, 0xCC),
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 12f, FontStyle.Regular),
                 Cursor = Cursors.Hand,
                 UseVisualStyleBackColor = false
             };
             btnGoToExplorer.FlatAppearance.BorderSize = 0;
-            btnGoToExplorer.FlatAppearance.MouseOverBackColor = Color.FromArgb(48, 48, 48);
+            btnGoToExplorer.FlatAppearance.MouseOverBackColor = Color.FromArgb(0x00, 0x5A, 0x9E);
             btnGoToExplorer.Click += (s, e) => tcLeft.SelectedTab = tpExplorer;
             tpTools.Controls.Add(btnGoToExplorer);
             scMain.SplitterMoving += (s, e) => userDraggingSplit = true;
