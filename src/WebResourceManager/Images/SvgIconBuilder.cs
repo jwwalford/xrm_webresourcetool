@@ -78,7 +78,7 @@ namespace WebResourceManager.Images
                 }
             }
 
-            svg.AppendFormat("<g fill=\"{0}\"{1} stroke=\"{2}\" stroke-width=\"{3}\" stroke-linecap=\"round\" stroke-linejoin=\"round\">",
+            svg.AppendFormat("<g color=\"{2}\" fill=\"{0}\"{1} stroke=\"{2}\" stroke-width=\"{3}\" stroke-linecap=\"round\" stroke-linejoin=\"round\">",
                 settings.Filled ? color : "none", settings.Filled ? " fill-opacity=\"0.35\"" : string.Empty, color, stroke);
             svg.Append(settings.Icon.Markup);
             svg.Append("</g></svg>");

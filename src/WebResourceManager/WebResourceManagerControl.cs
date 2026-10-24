@@ -33,7 +33,7 @@ namespace WebResourceManager
         private string tempFolder;
         private readonly ImageList typeIcons = TypeIcons.CreateImageList();
         private Panel pnlToolHost;
-        private Label lblPickTool;
+        private TableLayoutPanel pnlPickTool;
         private BannerDesignerPanel bannerDesigner;
         private CustomCodePanel customCode;
         private ButtonDesignerPanel buttonDesigner;
@@ -98,15 +98,28 @@ namespace WebResourceManager
 
             // Tools open in the right panel while the Tools tab is active; the
             // explorer's preview takes the panel back on the Resource explorer tab
-            lblPickTool = new Label
+            pnlPickTool = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4 };
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            pnlPickTool.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+            pnlPickTool.Controls.Add(new PictureBox
             {
-                Dock = DockStyle.Fill,
+                Anchor = AnchorStyles.None,
+                Image = ActionIcons.EmptyStateToolbox,
+                Size = ActionIcons.EmptyStateToolbox.Size,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Margin = new Padding(0, 0, 0, 8)
+            }, 0, 1);
+            pnlPickTool.Controls.Add(new Label
+            {
+                Anchor = AnchorStyles.None,
+                AutoSize = true,
                 ForeColor = SystemColors.GrayText,
-                Text = "Pick a tool on the left to start.",
-                TextAlign = ContentAlignment.MiddleCenter
-            };
+                Text = "Pick a tool on the left to start."
+            }, 0, 2);
             pnlToolHost = new Panel { Dock = DockStyle.Fill };
-            pnlToolHost.Controls.Add(lblPickTool);
+            pnlToolHost.Controls.Add(pnlPickTool);
             scMain.Panel2.Controls.Add(pnlToolHost);
             pnlToolHost.BringToFront();
             tcLeft.SelectedIndexChanged += (s, e) => UpdateRightPanel();

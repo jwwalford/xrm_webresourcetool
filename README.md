@@ -8,7 +8,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Tools**: large buttons grouped under blue (#007ACC) **HTML Tools** and **Image Tools** headers. The open tool is highlighted with a blue accent bar, and a blue **Resource explorer** footer button switches tabs. The left panel takes about 28% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...**, **Create custom HTML/CSS...**, **Create an icon...**, **Create an SVG icon...** and **Upload an image...** open in the right panel.
   - **Resource explorer**: the list of loaded web resources, with a coloured type badge (HTML, CSS, PNG, SVG, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name. **Search** and **Save to disk** show in the toolbar only while this tab is open. The type dropdown marks each type with its badge, "HTML, CSS and images" with a document icon and "All images" with a picture icon.
 - **Right panel**: follows the left tab.
-  - On **Tools**, it hosts the open tool (banner designer, button designer or custom HTML/CSS editor). Tools keep what you've entered when you switch between them.
+  - On **Tools**, it hosts the open tool (banner designer, button designer or custom HTML/CSS editor). Tools keep what you've entered when you switch between them. Before a tool is picked it shows a grey toolbox logo above "Pick a tool on the left to start."
   - On **Resource explorer**, it shows details of the selected web resource, the **live preview** on top and the **code preview** below (drag the splitter to resize).
 
 ## Features
@@ -40,7 +40,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Save to Dataverse** asks once before replacing existing web resources, then saves and publishes them together. **Export...** saves the files to disk.
 - **Create an SVG icon...** (Tools tab, Image Tools): make an SVG web resource from the icon gallery used by the banner and button designers.
   - **Appearance**: icon colour, fill, line width, an optional background (circle, rounded square or square) with its colour, and the size written into the SVG.
-  - **Icons**: click an icon in the gallery (General, Law, Accounting, Sales).
+  - **Icons**: click an icon in the gallery (General, Law, Accounting, Sales, Hardware, Buildings, IT, Emojis and circled Numbers 1 to 10).
   - **Preview** shows the icon at 16, 24, 32, 48 and 64 px (plus the saved size) on light and dark backgrounds.
   - Colours are written into the file (no `currentColor`), so it looks the same in an `img` tag or as an entity or command icon. **Save to Dataverse** creates or replaces the SVG web resource; **Export SVG...** saves the file.
 - **Upload an image...** (Tools tab, Image Tools): save any image file as a web resource.
@@ -50,7 +50,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Result** shows the format, size and file size, and warns above Dataverse's default 5 MB limit. The preview shows the image at actual size on a checkerboard and a dark background.
 - **Create a banner...** (Tools tab): a single-page designer for form banners (an HTML web resource with a coloured bar, an icon and a line of text), shown in the right panel.
   - **Web resource**: pick a solution (its publisher prefix is added to the name), then enter the name, display name and description. Typing a display name fills in the name in lowercase with underscores ("Form Banner" becomes `form_banner`, keeping any folder such as `banners/`) until you edit the name yourself; this works the same on every tool page.
-  - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour (white outline by default). Pick from 36 icons in the clickable gallery, grouped into General, Law, Accounting and Sales. A live preview updates as you change things.
+  - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour (white outline by default). Pick from 78 icons in the clickable gallery, grouped into General, Law, Accounting, Sales, Hardware, Buildings, IT, Emojis and Numbers (circled 1 to 10). A live preview updates as you change things.
   - **Save to Dataverse** creates the web resource (or replaces an existing HTML one after confirming), adds it to the chosen solution and publishes it.
   - **Export HTML...** saves the same HTML file to disk. This works without a connection.
   - The banner fills its frame, so set its height on the form with the web resource's row count, and turn off the label and border.

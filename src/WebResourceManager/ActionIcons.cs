@@ -32,6 +32,9 @@ namespace WebResourceManager
 
         private const int ToolSize = 20;
 
+        // Toolbox shown above "Pick a tool on the left to start", in the same grey as the text
+        public static readonly Bitmap EmptyStateToolbox = DrawEmptyStateToolbox(64);
+
         /// <summary>
         /// The white header at the top of a tool page: icon, title, description
         /// and the connection status on the right.
@@ -145,6 +148,40 @@ namespace WebResourceManager
             g.DrawLines(pen, new[] { new PointF(1.5f, 11f), new PointF(1.5f, 18.5f), new PointF(18.5f, 18.5f), new PointF(18.5f, 11f) });
             g.DrawLine(pen, 10f, 14.5f, 10f, 3f);
             g.DrawLines(pen, new[] { new PointF(5.5f, 7f), new PointF(10f, 2f), new PointF(14.5f, 7f) });
+        }
+
+        /// <summary>
+        /// A toolbox: handle, lid and body with two latches.
+        /// </summary>
+        private static Bitmap DrawEmptyStateToolbox(int size)
+        {
+            var bitmap = new Bitmap(size, size);
+            var scale = size / 64f;
+            using (var g = Graphics.FromImage(bitmap))
+            using (var pen = new Pen(SystemColors.GrayText, 3.5f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
+            using (var brush = new SolidBrush(SystemColors.GrayText))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.ScaleTransform(scale, scale);
+
+                // Handle
+                using (var handle = RoundedRectangle(new RectangleF(22f, 9f, 20f, 13f), 4f))
+                {
+                    g.DrawPath(pen, handle);
+                }
+
+                // Body, with the lid split across the top third
+                using (var body = RoundedRectangle(new RectangleF(5f, 20f, 54f, 36f), 5f))
+                {
+                    g.DrawPath(pen, body);
+                }
+                g.DrawLine(pen, 5f, 33f, 59f, 33f);
+
+                // Latches
+                g.FillRectangle(brush, 15f, 29f, 6f, 9f);
+                g.FillRectangle(brush, 43f, 29f, 6f, 9f);
+            }
+            return bitmap;
         }
 
         private static GraphicsPath RoundedRectangle(RectangleF bounds, float radius)
