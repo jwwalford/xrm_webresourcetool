@@ -9,9 +9,9 @@ namespace WebResourceManager
         ExportMetadata("Description", "Generate HTML/CSS and image web resources: design form banners and buttons, write custom HTML/CSS with a live preview, and browse existing web resources."),
         ExportMetadata("SmallImageBase64", PluginIcons.Small),
         ExportMetadata("BigImageBase64", PluginIcons.Big),
-        ExportMetadata("BackgroundColor", "Lavender"),
+        ExportMetadata("BackgroundColor", "#C8B8F0"),
         ExportMetadata("PrimaryFontColor", "Black"),
-        ExportMetadata("SecondaryFontColor", "Gray")]
+        ExportMetadata("SecondaryFontColor", "#4A4A4A")]
     public class Plugin : PluginBase
     {
         public override IXrmToolBoxPluginControl GetControl()
