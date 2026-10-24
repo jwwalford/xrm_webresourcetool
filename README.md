@@ -40,7 +40,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Save to Dataverse** asks once before replacing existing web resources, then saves and publishes them together. **Export...** saves the files to disk.
 - **Create an SVG icon...** (Tools tab, Image Tools): make an SVG web resource from the icon gallery used by the banner and button designers.
   - **Appearance**: icon colour, fill, line width, an optional background (circle, rounded square or square) with its colour, and the size written into the SVG.
-  - **Icons**: click an icon in the gallery (General, Law, Accounting, Sales, Hardware, Buildings, IT, Emojis and circled Numbers 1 to 10).
+  - **Icons**: click an icon in the gallery (General, Law, Accounting, Sales, Hardware, Buildings, IT, Emojis and circled Numbers 1 to 10). The gallery keeps its scroll position when you pick an icon.
   - **Preview** shows the icon at 16, 24, 32, 48 and 64 px (plus the saved size) on light and dark backgrounds.
   - Colours are written into the file (no `currentColor`), so it looks the same in an `img` tag or as an entity or command icon. **Save to Dataverse** creates or replaces the SVG web resource; **Export SVG...** saves the file.
 - **Upload an image...** (Tools tab, Image Tools): save any image file as a web resource.
@@ -85,6 +85,7 @@ dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 | `Buttons/ButtonDesignerPanel.cs` | Button designer UI: details, look, icon gallery, click action, preview |
 | `Buttons/ButtonHtmlBuilder.cs` | Generates the button HTML and click handler |
 | `Banners/IconGallery.cs` | Clickable icon grid shared by the banner and button designers |
+| `Banners/IconGalleryView.cs` | Loads the gallery into its WebView2, keeping the scroll position when it reloads after a selection |
 | `Images/IconGeneratorPanel.cs` | Icon tool UI: source image, fit or crop, size previews, PNG or ICO |
 | `Images/SvgIconPanel.cs` | SVG icon tool UI: details, appearance, icon gallery, preview |
 | `Images/SvgIconBuilder.cs` | Builds the SVG and its multi-size preview page |

@@ -272,7 +272,7 @@ namespace WebResourceManager.Images
                 if (html != lastGalleryHtml)
                 {
                     lastGalleryHtml = html;
-                    gallery.CoreWebView2.NavigateToString(html);
+                    _ = IconGalleryView.ShowAsync(gallery, html);
                 }
             }
         }
