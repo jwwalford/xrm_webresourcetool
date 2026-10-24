@@ -56,6 +56,8 @@ Copy `WebResourceManager.dll` into your XrmToolBox `Plugins` folder (by default 
 dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 ```
 
+XrmToolBox caches each plugin's name and images in `Plugins\manifest.json` and only refreshes them when a DLL's assembly version changes. Every build gets a new version (`1.1.<days since 2026-01-01>.<minute of the day, UTC>`), so a new DLL is picked up on restart. If the tool list still shows an old name or logo, close XrmToolBox, delete `Plugins\manifest.json` and start it again.
+
 ## Project layout
 
 | File | Purpose |

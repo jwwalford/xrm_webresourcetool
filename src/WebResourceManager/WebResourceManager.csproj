@@ -6,7 +6,14 @@
     <RootNamespace>WebResourceManager</RootNamespace>
     <AssemblyName>WebResourceManager</AssemblyName>
     <LangVersion>7.3</LangVersion>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
+    <!-- XrmToolBox only re-reads a plugin's name and images (Plugins\manifest.json) when the
+         DLL's assembly version changes, so every build gets a new one: 1.1.<days since
+         2026-01-01>.<minute of the day, UTC> -->
+    <BuildDay>$([System.DateTime]::UtcNow.Subtract($([System.DateTime]::Parse('2026-01-01'))).Days)</BuildDay>
+    <BuildMinute>$([System.Math]::Floor($([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes)))</BuildMinute>
+    <AssemblyVersion>1.1.$(BuildDay).$(BuildMinute)</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
     <Authors>Jono</Authors>
     <Description>Assisted Web Resource Generator: generate HTML/CSS and image web resources for Dataverse.</Description>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
