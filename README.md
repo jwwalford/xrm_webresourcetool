@@ -1,15 +1,9 @@
 <img width="800" height="100" alt="Banner" src="https://github.com/user-attachments/assets/632d3107-4492-4951-8625-04584efa3eb0" />
 
-An XrmToolBox plugin for generating HTML/CSS and Image web resources: build banners, buttons and custom HTML/CSS with live previews, and browse existing HTML, CSS and image web resources.
 
-## Layout
+An XrmToolBox plugin for generating HTML/CSS and Image web resources: build banners, buttons and custom HTML/CSS with live previews. Create icons, SVG and upload other image types. Browse existing HTML, CSS and image web resources.
 
-- **Left panel** with two tabs:
-  - **Tools**: large buttons grouped under blue (#007ACC) **HTML Tools** and **Image Tools** headers. The open tool is highlighted with a blue accent bar, and a blue **Resource explorer** footer button switches tabs. The left panel takes about 28% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...**, **Create custom HTML/CSS...**, **Create an icon...**, **Create an SVG icon...** and **Upload an image...** open in the right panel.
-  - **Resource explorer**: the list of loaded web resources, with a coloured type badge (HTML, CSS, PNG, SVG, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name. **Search** and **Save to disk** show in the toolbar only while this tab is open. The type dropdown marks each type with its badge, "HTML, CSS and images" with a document icon and "All images" with a picture icon.
-- **Right panel**: follows the left tab.
-  - On **Tools**, it hosts the open tool (banner designer, button designer or custom HTML/CSS editor). Tools keep what you've entered when you switch between them. Before a tool is picked it shows a grey toolbox logo above "Pick a tool on the left to start."
-  - On **Resource explorer**, it shows details of the selected web resource, the **live preview** on top and the **code preview** below (drag the splitter to resize).
+<img width="1908" height="920" alt="webresourcegen" src="https://github.com/user-attachments/assets/ad78f6ff-9848-44ba-b6a1-52d22b0e42f0" />
 
 ## Features
 
