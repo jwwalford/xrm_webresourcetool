@@ -14,8 +14,9 @@ namespace WebResourceManager.Banners
     {
         /// <summary>
         /// Builds the grid, drawn in the current colours so it previews the result.
+        /// The "None" choice is left out when includeNone is false.
         /// </summary>
-        public static string BuildHtml(BannerIcon selectedIcon, bool filled, Color background, Color text, Color iconColor)
+        public static string BuildHtml(BannerIcon selectedIcon, bool filled, Color background, Color text, Color iconColor, bool includeNone = true)
         {
             var html = new StringBuilder();
             html.Append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>");
@@ -30,7 +31,7 @@ namespace WebResourceManager.Banners
             html.Append("</style></head><body>");
 
             // Grouped by category, in the order categories first appear in the list
-            foreach (var group in BannerIcon.All.GroupBy(i => i.Category))
+            foreach (var group in BannerIcon.All.Where(i => includeNone || i != BannerIcon.None).GroupBy(i => i.Category))
             {
                 html.AppendFormat("<h4>{0}</h4><div class=\"grid\">", WebUtility.HtmlEncode(group.Key));
                 foreach (var icon in group)

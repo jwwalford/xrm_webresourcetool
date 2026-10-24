@@ -39,6 +39,8 @@ namespace WebResourceManager
         private ButtonDesignerPanel buttonDesigner;
         private IconGeneratorPanel iconGenerator;
         private Button btnIconTool;
+        private SvgIconPanel svgIcon;
+        private Button btnSvgTool;
         private Button btnBannerTool;
         private Button btnButtonTool;
         private Button btnCustomCodeTool;
@@ -137,7 +139,7 @@ namespace WebResourceManager
             btnCustomCodeTool = toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
             toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
             btnIconTool = toolsPanel.AddTool("Create an icon...", "Resize an image into icon sizes such as 16x16 and 32x32 and save the ones you pick as web resources", OpenIconGenerator);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
+            btnSvgTool = toolsPanel.AddTool("Create an SVG icon...", "Pick an icon from the gallery, set its colours, background and size and save it as an SVG web resource", OpenSvgIcon);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
         }
 
@@ -189,6 +191,17 @@ namespace WebResourceManager
             }
 
             ShowTool(iconGenerator, btnIconTool);
+        }
+
+        private void OpenSvgIcon()
+        {
+            if (svgIcon == null)
+            {
+                svgIcon = new SvgIconPanel(Service, WebViewDataFolder);
+                svgIcon.Saved += Tool_Saved;
+            }
+
+            ShowTool(svgIcon, btnSvgTool);
         }
 
         /// <summary>
@@ -340,6 +353,7 @@ namespace WebResourceManager
             customCode?.SetService(newService);
             buttonDesigner?.SetService(newService);
             iconGenerator?.SetService(newService);
+            svgIcon?.SetService(newService);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)

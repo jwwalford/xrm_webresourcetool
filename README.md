@@ -5,7 +5,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
 ## Layout
 
 - **Left panel** with two tabs:
-  - **Tools**: large buttons grouped under black **HTML Tools** and **Image Tools** headers. The open tool is highlighted with a blue accent bar, and a **Resource explorer** footer button switches tabs. The left panel takes about 28% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...**, **Create custom HTML/CSS...** and **Create an icon...** open in the right panel; the other buttons are placeholders for future tools.
+  - **Tools**: large buttons grouped under black **HTML Tools** and **Image Tools** headers. The open tool is highlighted with a blue accent bar, and a **Resource explorer** footer button switches tabs. The left panel takes about 28% of the width on this tab and half on the explorer; each tab remembers where you drag the splitter. **Create a banner...**, **Create a button...**, **Create custom HTML/CSS...**, **Create an icon...** and **Create an SVG icon...** open in the right panel; the other buttons are placeholders for future tools.
   - **Resource explorer**: the list of loaded web resources, with a coloured type badge (HTML, CSS, PNG, SVG, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name. **Search** and **Save to disk** show in the toolbar only while this tab is open. The type dropdown marks each type with its badge, "HTML, CSS and images" with a document icon and "All images" with a picture icon.
 - **Right panel**: follows the left tab.
   - On **Tools**, it hosts the open tool (banner designer, button designer or custom HTML/CSS editor). Tools keep what you've entered when you switch between them.
@@ -36,6 +36,11 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Sizes**: 16, 24, 32, 48, 64, 80 and 128 px, each shown at actual size on a light and a dark background. Tick the ones to keep (16 and 32 by default).
   - **Save as**: PNG creates one web resource per size (`my_icon_16.png`, `my_icon_32.png`, ...); ICO creates one `.ico` holding every ticked size.
   - **Save to Dataverse** asks once before replacing existing web resources, then saves and publishes them together. **Export...** saves the files to disk.
+- **Create an SVG icon...** (Tools tab, Image Tools): make an SVG web resource from the icon gallery used by the banner and button designers.
+  - **Appearance**: icon colour, fill, line width, an optional background (circle, rounded square or square) with its colour, and the size written into the SVG.
+  - **Icons**: click an icon in the gallery (General, Law, Accounting, Sales).
+  - **Preview** shows the icon at 16, 24, 32, 48 and 64 px (plus the saved size) on light and dark backgrounds.
+  - Colours are written into the file (no `currentColor`), so it looks the same in an `img` tag or as an entity or command icon. **Save to Dataverse** creates or replaces the SVG web resource; **Export SVG...** saves the file.
 - **Create a banner...** (Tools tab): a single-page designer for form banners (an HTML web resource with a coloured bar, an icon and a line of text), shown in the right panel.
   - **Web resource**: pick a solution (its publisher prefix is added to the name), then enter the name, display name and description.
   - **Banner**: text, text colour, background colour, font size, bold, alignment, and an icon with its own colour (white outline by default). Pick from 36 icons in the clickable gallery, grouped into General, Law, Accounting and Sales. A live preview updates as you change things.
@@ -74,6 +79,8 @@ dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 | `Buttons/ButtonHtmlBuilder.cs` | Generates the button HTML and click handler |
 | `Banners/IconGallery.cs` | Clickable icon grid shared by the banner and button designers |
 | `Images/IconGeneratorPanel.cs` | Icon tool UI: source image, fit or crop, size previews, PNG or ICO |
+| `Images/SvgIconPanel.cs` | SVG icon tool UI: details, appearance, icon gallery, preview |
+| `Images/SvgIconBuilder.cs` | Builds the SVG and its multi-size preview page |
 | `Images/IconResizer.cs` | High-quality square resizing and PNG / multi-size ICO encoding |
 | `Tools/CustomCodePanel.cs` | Custom HTML/CSS tool: details, live preview and code editor |
 | `Tools/WebResourceDetailsBox.cs` | Shared web resource details group (solution, name, display name, description) |
