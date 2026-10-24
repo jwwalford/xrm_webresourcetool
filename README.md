@@ -1,6 +1,6 @@
-# Web Resource Manager for XrmToolBox
+# Assisted Web Resource Generator
 
-An XrmToolBox tool for working with Dataverse HTML, CSS and image web resources: browse and preview them, and create new ones with built-in tools.
+An XrmToolBox plugin for generating HTML/CSS and Image web resources: build banners, buttons and custom HTML/CSS with live previews, and browse existing HTML, CSS and image web resources.
 
 ## Layout
 
