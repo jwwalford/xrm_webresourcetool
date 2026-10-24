@@ -9,6 +9,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using ScintillaNET;
 using WebResourceManager.Banners;
+using WebResourceManager.Buttons;
 using WebResourceManager.Models;
 using WebResourceManager.Services;
 using WebResourceManager.Tools;
@@ -34,6 +35,7 @@ namespace WebResourceManager
         private Label lblPickTool;
         private BannerDesignerPanel bannerDesigner;
         private CustomCodePanel customCode;
+        private ButtonDesignerPanel buttonDesigner;
         private bool loaded;
 
         public WebResourceManagerControl()
@@ -85,8 +87,8 @@ namespace WebResourceManager
 
             toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
             toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
+            toolsPanel.AddTool("Create a button...", "Design a form button with an icon and a click action, and save it as an HTML web resource", OpenButtonDesigner);
             toolsPanel.AddTool("Create custom HTML/CSS...", "Write your own HTML or CSS with a live preview and save it as a web resource", OpenCustomCode);
-            toolsPanel.AddTool("Coming soon", "Placeholder for a future HTML tool", null);
             toolsPanel.AddGroup("Image Tools", ToolGroupIcon.Image);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
             toolsPanel.AddTool("Coming soon", "Placeholder for a future image tool", null);
@@ -108,6 +110,17 @@ namespace WebResourceManager
             }
 
             ShowTool(bannerDesigner);
+        }
+
+        private void OpenButtonDesigner()
+        {
+            if (buttonDesigner == null)
+            {
+                buttonDesigner = new ButtonDesignerPanel(Service, WebViewDataFolder);
+                buttonDesigner.Saved += Tool_Saved;
+            }
+
+            ShowTool(buttonDesigner);
         }
 
         private void OpenCustomCode()
@@ -214,6 +227,7 @@ namespace WebResourceManager
             tsslCount.Text = "Connected to " + detail?.ConnectionName + ". Pick a type and click Load web resources.";
             bannerDesigner?.SetService(newService);
             customCode?.SetService(newService);
+            buttonDesigner?.SetService(newService);
         }
 
         private void tsbClose_Click(object sender, EventArgs e)

@@ -5,10 +5,10 @@ An XrmToolBox tool for working with Dataverse HTML, CSS and image web resources:
 ## Layout
 
 - **Left panel** with two tabs:
-  - **Tools**: large buttons grouped under **HTML Tools** and **Image Tools**. **Create a banner...** and **Create custom HTML/CSS...** open in the right panel; the other buttons are placeholders for future tools.
+  - **Tools**: large buttons grouped under **HTML Tools** and **Image Tools**. **Create a banner...**, **Create a button...** and **Create custom HTML/CSS...** open in the right panel; the other buttons are placeholders for future tools.
   - **Resource explorer**: the list of loaded web resources, with a coloured type badge (HTML, CSS, PNG, SVG, ...), name, display name, type, managed state and modified date. Click a column to sort; type in **Search** to filter by name or display name.
 - **Right panel**: follows the left tab.
-  - On **Tools**, it hosts the open tool (the banner designer or the custom HTML/CSS editor). Tools keep what you've entered when you switch between them.
+  - On **Tools**, it hosts the open tool (banner designer, button designer or custom HTML/CSS editor). Tools keep what you've entered when you switch between them.
   - On **Resource explorer**, it shows details of the selected web resource, the **live preview** on top and the **code preview** below (drag the splitter to resize).
 
 ## Features
@@ -21,6 +21,10 @@ An XrmToolBox tool for working with Dataverse HTML, CSS and image web resources:
   - SVG: rendered image, with the SVG markup below.
   - PNG, JPG, GIF, ICO: rendered image with dimensions and size. Large images shrink to fit. There's no code pane for these.
 - **Save to disk** and **Copy name** from the toolbar or right-click menu.
+- **Create a button...** (Tools tab): a single-page designer for a button to place on a form.
+  - **Button**: text, tooltip, text and background colours, font size, bold, icon and icon colour (same gallery as banners), corner roundness (0 is square, 50+ is a pill), and size: fill the web resource control or a fixed width and height positioned left, centre or right.
+  - **When clicked**: run JavaScript (with `Xrm` and `formContext` for the form), open a URL in a new tab, save the record, or do nothing. Scripts reach the form through `parent.Xrm`.
+  - The preview shows the button in a control of the height you choose; clicking it there doesn't run the action.
 - **Create custom HTML/CSS...** (Tools tab): write an HTML or CSS web resource by hand.
   - **Web resource** details (top left) work the same way as the banner designer's.
   - **Preview** (top right) updates as you type. HTML is rendered as a page; CSS is applied to a sample page.
@@ -60,6 +64,9 @@ dotnet build -p:XrmToolBoxPluginsPath="%AppData%\MscrmTools\XrmToolBox\Plugins"
 | `Services/WebResourceRepository.cs` | Dataverse queries (metadata list, content on demand) |
 | `Models/WebResourceType.cs` | Web resource type option set values, labels and preview kinds |
 | `ToolsPanel.cs` | The Tools tab: group headers and tool buttons |
+| `Buttons/ButtonDesignerPanel.cs` | Button designer UI: details, look, icon gallery, click action, preview |
+| `Buttons/ButtonHtmlBuilder.cs` | Generates the button HTML and click handler |
+| `Banners/IconGallery.cs` | Clickable icon grid shared by the banner and button designers |
 | `Tools/CustomCodePanel.cs` | Custom HTML/CSS tool: details, live preview and code editor |
 | `Tools/WebResourceDetailsBox.cs` | Shared web resource details group (solution, name, display name, description) |
 | `Tools/WebResourcePublisher.cs` | Shared save: replace check, create or update, add to solution, publish |
