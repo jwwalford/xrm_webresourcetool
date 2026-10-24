@@ -43,9 +43,10 @@ namespace WebResourceManager
 
         // Left panel width as a share of the control, remembered per tab: the
         // tool buttons need less room than the explorer's list
-        private double toolsSplit = 0.3;
+        private double toolsSplit = 0.28;
         private double explorerSplit = 0.5;
         private bool applyingSplit;
+        private bool userDraggingSplit;
 
         public WebResourceManagerControl()
         {
@@ -111,7 +112,12 @@ namespace WebResourceManager
             btnGoToExplorer.FlatAppearance.MouseOverBackColor = Color.FromArgb(48, 48, 48);
             btnGoToExplorer.Click += (s, e) => tcLeft.SelectedTab = tpExplorer;
             tpTools.Controls.Add(btnGoToExplorer);
+            scMain.SplitterMoving += (s, e) => userDraggingSplit = true;
             scMain.SplitterMoved += ScMain_SplitterMoved;
+
+            // The control is created at its designer size and only gets its real
+            // width once XrmToolBox docks it, so re-apply the share on every resize
+            scMain.SizeChanged += (s, e) => ApplySplit();
 
             toolsPanel.AddGroup("HTML Tools", ToolGroupIcon.Html);
             btnBannerTool = toolsPanel.AddTool("Create a banner...", "Design a form banner and save it as an HTML web resource", OpenBannerWizard);
@@ -220,11 +226,14 @@ namespace WebResourceManager
 
         private void ScMain_SplitterMoved(object sender, SplitterEventArgs e)
         {
-            // Remember where the user dragged it for the current tab
-            if (applyingSplit || scMain.Width <= scMain.SplitterWidth)
+            // Remember where the user dragged it for the current tab; ignore
+            // moves caused by resizing or by ApplySplit itself
+            if (!userDraggingSplit || applyingSplit || scMain.Width <= scMain.SplitterWidth)
             {
                 return;
             }
+
+            userDraggingSplit = false;
 
             var ratio = (double)scMain.SplitterDistance / (scMain.Width - scMain.SplitterWidth);
             if (tcLeft.SelectedTab == tpTools)
