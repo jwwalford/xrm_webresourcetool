@@ -107,3 +107,7 @@ Then submit the tool on the XrmToolBox website so it is listed in the Tool Libra
 | `Banners/BannerDesignerPanel.cs` | Banner designer UI: details, design, icon gallery, live preview, save and export |
 | `Banners/BannerHtmlBuilder.cs` | Generates the banner HTML |
 | `Banners/BannerIcon.cs` | Built-in SVG icons (based on [Feather Icons](https://feathericons.com), MIT) |
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).

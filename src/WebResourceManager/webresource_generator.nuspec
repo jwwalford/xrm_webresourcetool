@@ -10,6 +10,8 @@
     <title>Assisted Web Resource Generator</title>
     <authors>Jono</authors>
     <owners>Jono</owners>
+    <license type="expression">MIT</license>
+    <copyright>Copyright (c) 2026 Jono</copyright>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <projectUrl>https://github.com/jwwalford/xrm_webresourcetool</projectUrl>
     <iconUrl>https://raw.githubusercontent.com/jwwalford/xrm_webresourcetool/main/assets/plugin-80x80.png</iconUrl>
