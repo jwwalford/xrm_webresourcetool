@@ -39,6 +39,7 @@ namespace WebResourceManager.Images
         private Button btnExport;
         private Button btnSave;
         private Label lblStatus;
+        private SaveProgress saveProgress;
 
         public IconGeneratorPanel(Microsoft.Xrm.Sdk.IOrganizationService service)
         {
@@ -112,7 +113,8 @@ namespace WebResourceManager.Images
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
-            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, lblStatus });
+            saveProgress = new SaveProgress(lblStatus);
+            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, saveProgress, lblStatus });
 
             // Details and source side by side, the size previews take the rest
             var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(8, 6, 8, 0) };
@@ -424,16 +426,16 @@ namespace WebResourceManager.Images
             SetBusy(true);
             try
             {
-                var result = await WebResourcePublisher.SaveManyAsync(this, Caption, service, details, items, status => lblStatus.Text = status);
+                var result = await WebResourcePublisher.SaveManyAsync(this, Caption, service, details, items, saveProgress.Report);
                 if (result == null)
                 {
-                    lblStatus.Text = string.Empty;
+                    saveProgress.Reset();
                     return;
                 }
 
                 var summary = items.Count == 1 ? items[0].Name : string.Format("{0} icon web resources", items.Count);
                 Saved?.Invoke(this, summary);
-                lblStatus.Text = "Saved and published " + summary;
+                saveProgress.Complete("Saved and published " + summary);
 
                 var parts = new List<string>();
                 if (result.Item1 > 0) parts.Add(result.Item1 + " created");
@@ -447,7 +449,7 @@ namespace WebResourceManager.Images
             }
             catch (Exception ex)
             {
-                lblStatus.Text = string.Empty;
+                saveProgress.Fail();
                 MessageBox.Show(this, "Could not save: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally

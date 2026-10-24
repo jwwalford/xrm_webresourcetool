@@ -21,6 +21,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - SVG: rendered image, with the SVG markup below.
   - PNG, JPG, GIF, ICO: rendered image with dimensions and size. Large images shrink to fit. There's no code pane for these.
 - **Save to disk** and **Copy name** from the toolbar or right-click menu.
+- Every tool shows a progress bar next to **Save to Dataverse** while it checks for an existing web resource, creates or updates it, and publishes; the status text names each step, and a failed save shows "Save failed" in red.
 - Toolbar and tool buttons carry small runtime-drawn icons (`ActionIcons.cs`): a red cross for Close (icon only), a refresh arrow for Load, a disk for Save and a tray arrow for Export. Each tool page shows a black icon before its title.
 - **Create a button...** (Tools tab): a single-page designer for a button to place on a form.
   - **Button**: text, tooltip, text and background colours, font size, bold, icon and icon colour (same gallery as banners), corner roundness (0 is square, 50+ is a pill), and size: fill the web resource control or a fixed width and height positioned left, centre or right.

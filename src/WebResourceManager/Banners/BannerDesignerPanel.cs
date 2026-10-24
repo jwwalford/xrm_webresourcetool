@@ -35,6 +35,7 @@ namespace WebResourceManager.Banners
         private Button btnExport;
         private Button btnSave;
         private Label lblStatus;
+        private SaveProgress saveProgress;
         private TableLayoutPanel layout;
 
         private WebResourceDetailsBox details;
@@ -110,7 +111,8 @@ namespace WebResourceManager.Banners
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
-            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, lblStatus });
+            saveProgress = new SaveProgress(lblStatus);
+            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, saveProgress, lblStatus });
 
             // Top row: details and banner settings side by side; then icons; then preview
             layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, Padding = new Padding(8, 6, 8, 0) };
@@ -407,16 +409,16 @@ namespace WebResourceManager.Banners
             try
             {
                 var outcome = await WebResourcePublisher.SaveAsync(this, Caption, service, details, WebResourceType.Html,
-                    BannerHtmlBuilder.Build(settings), "this banner", status => lblStatus.Text = status);
+                    BannerHtmlBuilder.Build(settings), "this banner", saveProgress.Report);
                 if (outcome == SaveOutcome.Cancelled)
                 {
-                    lblStatus.Text = string.Empty;
+                    saveProgress.Reset();
                     return;
                 }
 
                 var name = details.FullName;
                 Saved?.Invoke(this, name);
-                lblStatus.Text = "Saved and published " + name;
+                saveProgress.Complete("Saved and published " + name);
                 MessageBox.Show(this,
                     string.Format("{0} was {1} and published{2}.\r\n\r\nAdd it to a form as a web resource; set the row count to control the banner height and turn off \"Display label on the form\" and the border.",
                         name, outcome == SaveOutcome.Updated ? "updated" : "created", solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
@@ -424,7 +426,7 @@ namespace WebResourceManager.Banners
             }
             catch (Exception ex)
             {
-                lblStatus.Text = string.Empty;
+                saveProgress.Fail();
                 MessageBox.Show(this, "Could not save the banner: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally

@@ -35,7 +35,7 @@ namespace WebResourceManager.Tools
     {
         /// <param name="what">How the content is described in the replace prompt, e.g. "this banner".</param>
         public static Task<SaveOutcome> SaveAsync(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
-            WebResourceDetailsBox details, WebResourceType type, string content, string what, Action<string> reportStatus)
+            WebResourceDetailsBox details, WebResourceType type, string content, string what, Action<string, int> reportStatus)
         {
             return SaveBase64Async(owner, caption, service, details, type, WebResourceRepository.EncodeText(content), what, reportStatus);
         }
@@ -44,13 +44,13 @@ namespace WebResourceManager.Tools
         /// As <see cref="SaveAsync"/>, for binary content such as images.
         /// </summary>
         public static Task<SaveOutcome> SaveBytesAsync(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
-            WebResourceDetailsBox details, WebResourceType type, byte[] content, string what, Action<string> reportStatus)
+            WebResourceDetailsBox details, WebResourceType type, byte[] content, string what, Action<string, int> reportStatus)
         {
             return SaveBase64Async(owner, caption, service, details, type, Convert.ToBase64String(content), what, reportStatus);
         }
 
         private static async Task<SaveOutcome> SaveBase64Async(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
-            WebResourceDetailsBox details, WebResourceType type, string base64Content, string what, Action<string> reportStatus)
+            WebResourceDetailsBox details, WebResourceType type, string base64Content, string what, Action<string, int> reportStatus)
         {
             var name = details.FullName;
             var displayName = details.DisplayName;
@@ -58,7 +58,7 @@ namespace WebResourceManager.Tools
             var solution = details.SelectedSolution;
             var repository = new WebResourceRepository(service);
 
-            reportStatus("Checking for an existing web resource...");
+            reportStatus("Checking for an existing web resource...", 10);
             var existing = await Task.Run(() => repository.FindByName(name));
             if (existing != null)
             {
@@ -77,9 +77,12 @@ namespace WebResourceManager.Tools
                 }
             }
 
-            reportStatus("Saving and publishing...");
+            reportStatus(existing != null ? "Updating " + name + "..." : "Creating " + name + "...", 35);
             var existingId = existing != null ? existing.Id : (Guid?)null;
-            await Task.Run(() => repository.SaveContent(existingId, name, displayName, description, base64Content, type, solution.UniqueName));
+            var id = await Task.Run(() => repository.SaveContent(existingId, name, displayName, description, base64Content, type, solution.UniqueName, false));
+
+            reportStatus("Publishing...", 75);
+            await Task.Run(() => repository.Publish(new[] { id }));
 
             return existing != null ? SaveOutcome.Updated : SaveOutcome.Created;
         }
@@ -91,13 +94,13 @@ namespace WebResourceManager.Tools
         /// Returns the number created and updated, or null if cancelled.
         /// </summary>
         public static async Task<Tuple<int, int>> SaveManyAsync(IWin32Window owner, string caption, Microsoft.Xrm.Sdk.IOrganizationService service,
-            WebResourceDetailsBox details, IList<WebResourceContent> items, Action<string> reportStatus)
+            WebResourceDetailsBox details, IList<WebResourceContent> items, Action<string, int> reportStatus)
         {
             var description = details.Description;
             var solution = details.SelectedSolution;
             var repository = new WebResourceRepository(service);
 
-            reportStatus("Checking for existing web resources...");
+            reportStatus("Checking for existing web resources...", 5);
             var existing = await Task.Run(() => items.ToDictionary(i => i.Name, i => repository.FindByName(i.Name), StringComparer.OrdinalIgnoreCase));
 
             var wrongType = items.FirstOrDefault(i => existing[i.Name] != null && existing[i.Name].Type != i.Type);
@@ -126,12 +129,12 @@ namespace WebResourceManager.Tools
             for (var n = 0; n < items.Count; n++)
             {
                 var item = items[n];
-                reportStatus(string.Format("Saving {0} of {1}...", n + 1, items.Count));
+                reportStatus(string.Format("Saving {0} of {1}...", n + 1, items.Count), 10 + 70 * n / items.Count);
                 var existingId = existing[item.Name] != null ? existing[item.Name].Id : (Guid?)null;
                 ids.Add(await Task.Run(() => repository.SaveContent(existingId, item.Name, item.DisplayName, description, item.Base64Content, item.Type, solution.UniqueName, false)));
             }
 
-            reportStatus("Publishing...");
+            reportStatus("Publishing...", 85);
             await Task.Run(() => repository.Publish(ids));
 
             return Tuple.Create(items.Count - replacing.Count, replacing.Count);

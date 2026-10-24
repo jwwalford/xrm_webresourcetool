@@ -63,6 +63,7 @@ namespace WebResourceManager.Images
         private Button btnExport;
         private Button btnSave;
         private Label lblStatus;
+        private SaveProgress saveProgress;
 
         public ImageUploadPanel(Microsoft.Xrm.Sdk.IOrganizationService service, string webViewDataFolder)
         {
@@ -132,7 +133,8 @@ namespace WebResourceManager.Images
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
-            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, lblStatus });
+            saveProgress = new SaveProgress(lblStatus);
+            buttons.Controls.AddRange(new Control[] { btnSave, btnExport, saveProgress, lblStatus });
 
             // Details and customisation side by side, the preview takes the rest
             var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(8, 6, 8, 0) };
@@ -572,16 +574,16 @@ namespace WebResourceManager.Images
             try
             {
                 var outcome = await WebResourcePublisher.SaveBytesAsync(this, Caption, service, details, outputType, bytes,
-                    "this image", status => lblStatus.Text = status);
+                    "this image", saveProgress.Report);
                 if (outcome == SaveOutcome.Cancelled)
                 {
-                    lblStatus.Text = string.Empty;
+                    saveProgress.Reset();
                     return;
                 }
 
                 var name = details.FullName;
                 Saved?.Invoke(this, name);
-                lblStatus.Text = "Saved and published " + name;
+                saveProgress.Complete("Saved and published " + name);
                 MessageBox.Show(this,
                     string.Format("{0} was {1} and published{2}.", name, outcome == SaveOutcome.Updated ? "updated" : "created",
                         solution.IsDefault ? string.Empty : " in " + solution.FriendlyName),
@@ -589,7 +591,7 @@ namespace WebResourceManager.Images
             }
             catch (Exception ex)
             {
-                lblStatus.Text = string.Empty;
+                saveProgress.Fail();
                 MessageBox.Show(this, "Could not save the image: " + ex.Message, Caption, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
