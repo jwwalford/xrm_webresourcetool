@@ -80,6 +80,15 @@ namespace WebResourceManager.Banners
         /// </summary>
         public event EventHandler<string> Saved;
 
+        /// <summary>
+        /// Raised when Save is clicked without a connection, so the host can open the connection dialog.
+        /// </summary>
+        public event EventHandler ConnectionRequested
+        {
+            add { details.ConnectionRequested += value; }
+            remove { details.ConnectionRequested -= value; }
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -399,7 +408,7 @@ namespace WebResourceManager.Banners
 
         private async void BtnSave_Click(object sender, EventArgs e)
         {
-            if (!details.CanSave || !details.ValidateName(Caption))
+            if (!details.EnsureConnected() || !details.CanSave || !details.ValidateName(Caption))
             {
                 return;
             }

@@ -126,9 +126,33 @@ namespace WebResourceManager.Tools
             get { return cbSolution.SelectedItem as SolutionOption; }
         }
 
+        /// <summary>
+        /// True when Save can be clicked. Without a connection Save stays available,
+        /// so clicking it can ask XrmToolBox to connect (see <see cref="EnsureConnected"/>).
+        /// </summary>
         public bool CanSave
         {
-            get { return service != null && SelectedSolution != null; }
+            get { return service == null || SelectedSolution != null; }
+        }
+
+        /// <summary>
+        /// Raised by <see cref="EnsureConnected"/> when there's no connection.
+        /// </summary>
+        public event EventHandler ConnectionRequested;
+
+        /// <summary>
+        /// Returns true when connected. Otherwise asks the owner to open the
+        /// connection dialog and returns false, so the save stops for now.
+        /// </summary>
+        public bool EnsureConnected()
+        {
+            if (service != null)
+            {
+                return true;
+            }
+
+            ConnectionRequested?.Invoke(this, EventArgs.Empty);
+            return false;
         }
 
         public string DisplayName
@@ -263,7 +287,7 @@ namespace WebResourceManager.Tools
 
             if (service == null)
             {
-                lblSolutionStatus.Text = "Not connected to Dataverse. You can still create the " + noun + " and export it.";
+                lblSolutionStatus.Text = "Not connected to Dataverse. Save to Dataverse asks you to connect, or you can export the " + noun + " to disk.";
                 cbSolution.Enabled = false;
                 UpdateFullName();
                 return;

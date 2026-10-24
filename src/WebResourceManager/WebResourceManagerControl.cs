@@ -170,6 +170,7 @@ namespace WebResourceManager
                 // Not connected is fine: the designer can still design and export to disk
                 bannerDesigner = new BannerDesignerPanel(Service, WebViewDataFolder);
                 bannerDesigner.Saved += Tool_Saved;
+                bannerDesigner.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(bannerDesigner, btnBannerTool);
@@ -181,6 +182,7 @@ namespace WebResourceManager
             {
                 buttonDesigner = new ButtonDesignerPanel(Service, WebViewDataFolder);
                 buttonDesigner.Saved += Tool_Saved;
+                buttonDesigner.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(buttonDesigner, btnButtonTool);
@@ -192,6 +194,7 @@ namespace WebResourceManager
             {
                 customCode = new CustomCodePanel(Service, WebViewDataFolder);
                 customCode.Saved += Tool_Saved;
+                customCode.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(customCode, btnCustomCodeTool);
@@ -203,6 +206,7 @@ namespace WebResourceManager
             {
                 iconGenerator = new IconGeneratorPanel(Service);
                 iconGenerator.Saved += Tool_Saved;
+                iconGenerator.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(iconGenerator, btnIconTool);
@@ -214,6 +218,7 @@ namespace WebResourceManager
             {
                 svgIcon = new SvgIconPanel(Service, WebViewDataFolder);
                 svgIcon.Saved += Tool_Saved;
+                svgIcon.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(svgIcon, btnSvgTool);
@@ -225,6 +230,7 @@ namespace WebResourceManager
             {
                 imageUpload = new ImageUploadPanel(Service, WebViewDataFolder);
                 imageUpload.Saved += Tool_Saved;
+                imageUpload.ConnectionRequested += Tool_ConnectionRequested;
             }
 
             ShowTool(imageUpload, btnUploadTool);
@@ -259,6 +265,20 @@ namespace WebResourceManager
             {
                 tool.Controls.OfType<ToolHeader>().FirstOrDefault()?.SetConnection(Service != null, connection);
             }
+        }
+
+        /// <summary>
+        /// A tool's Save was clicked without a connection. ExecuteMethod opens the
+        /// XrmToolBox connection dialog and runs ConnectedForSave once connected.
+        /// </summary>
+        private void Tool_ConnectionRequested(object sender, EventArgs e)
+        {
+            ExecuteMethod(ConnectedForSave);
+        }
+
+        private void ConnectedForSave()
+        {
+            tsslCount.Text = "Connected to " + ConnectionDetail?.ConnectionName + ". Choose a solution and click Save to Dataverse again.";
         }
 
         private void Tool_Saved(object sender, string name)

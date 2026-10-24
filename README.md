@@ -14,6 +14,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
 ## Features
 
 - **Connection status**: each tool page shows the connection on the right of its header ("Connected to <org>" in green, or "Not connected" in red), and updates when you connect or switch connection.
+- **Working without a connection**: every tool can be used and exported to disk without a connection. Clicking **Save to Dataverse** while not connected opens the XrmToolBox connection dialog; once connected, choose a solution and save again. Dataverse calls use late-bound `Entity` and `QueryExpression` only (no early-bound classes).
 - **Type filter**: HTML, CSS and images (default), HTML only, CSS only, all images, or a single image type (PNG, JPG, GIF, ICO, SVG). **Load web resources** switches to the Resource explorer tab.
 - **Options**: hide hidden (system) web resources (on by default) and show unmanaged only.
 - **Preview**, loaded on demand when you select a row:
