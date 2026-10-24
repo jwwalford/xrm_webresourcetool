@@ -58,6 +58,15 @@ namespace WebResourceManager
             lvWebResources.ListViewItemSorter = sorter;
             lvWebResources.SmallImageList = typeIcons;
 
+            tsbClose.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            tsbClose.Image = ActionIcons.Close;
+            tsbClose.ToolTipText = "Close";
+            tsbLoad.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
+            tsbLoad.Image = ActionIcons.Load;
+            tsbSave.DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
+            tsbSave.Image = ActionIcons.Save;
+            tsmiSave.Image = ActionIcons.Save;
+
             tscbType.ComboBox.DrawMode = DrawMode.OwnerDrawFixed;
             tscbType.ComboBox.ItemHeight = TypeIcons.BadgeSize.Height + 2;
             tscbType.ComboBox.DrawItem += tscbType_DrawItem;

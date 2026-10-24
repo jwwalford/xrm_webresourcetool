@@ -115,6 +115,8 @@ namespace WebResourceManager.Images
             };
             btnSave = new Button { Text = "Save to Dataverse", Width = 130, Enabled = false };
             btnExport = new Button { Text = "Export...", Width = 90, Enabled = false };
+            ActionIcons.Apply(btnSave, ActionIcons.Save);
+            ActionIcons.Apply(btnExport, ActionIcons.Export);
             lblStatus = new Label { AutoSize = true, ForeColor = Color.DimGray, Margin = new Padding(3, 8, 12, 3) };
             btnExport.Click += BtnExport_Click;
             btnSave.Click += BtnSave_Click;
