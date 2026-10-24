@@ -209,6 +209,13 @@ namespace WebResourceManager
         {
             var showTools = tcLeft.SelectedTab == tpTools;
             pnlToolHost.Visible = showTools;
+
+            // Search and Save to disk only apply to the explorer list
+            tssSeparator2.Visible = !showTools;
+            tslSearch.Visible = !showTools;
+            tstSearch.Visible = !showTools;
+            tssSeparator3.Visible = !showTools;
+            tsbSave.Visible = !showTools;
             tsPreview.Visible = !showTools;
             lblDetails.Visible = !showTools;
             scPreview.Visible = !showTools;
@@ -393,6 +400,9 @@ namespace WebResourceManager
             return value != null && value.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
+        private static readonly Bitmap DocumentGlyph = TypeIcons.DrawDocument();
+        private static readonly Bitmap PictureGlyph = TypeIcons.DrawPicture();
+
         private void tscbType_DrawItem(object sender, DrawItemEventArgs e)
         {
             e.DrawBackground();
@@ -404,10 +414,15 @@ namespace WebResourceManager
             var filter = (WebResourceTypeFilter)tscbType.Items[e.Index];
             var iconBounds = new Rectangle(e.Bounds.Left + 2, e.Bounds.Top + (e.Bounds.Height - TypeIcons.BadgeSize.Height) / 2, TypeIcons.BadgeSize.Width, TypeIcons.BadgeSize.Height);
 
-            // Only single-type entries get a badge; "All types" and "All images" stay text-only
+            // Single types get their badge; "All images" gets a picture and the mixed filter a document
             if (filter.Types.Length == 1)
             {
                 e.Graphics.DrawImage(typeIcons.Images[TypeIcons.Key(filter.Types[0])], iconBounds);
+            }
+            else
+            {
+                var allImages = filter.Types.All(t => WebResourceTypeInfo.GetPreviewKind(t) == PreviewKind.Image || t == WebResourceType.Svg);
+                e.Graphics.DrawImage(allImages ? PictureGlyph : DocumentGlyph, iconBounds);
             }
 
             var textBounds = new Rectangle(iconBounds.Right + 4, e.Bounds.Top, e.Bounds.Right - iconBounds.Right - 4, e.Bounds.Height);
