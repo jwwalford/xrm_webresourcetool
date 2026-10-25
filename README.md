@@ -11,6 +11,10 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Button**: text, tooltip, text and background colours, font size, bold, icon and icon colour (same gallery as banners), corner roundness (0 is square, 50+ is a pill), and size: fill the web resource control or a fixed width and height positioned left, centre or right.
   - **When clicked**: run JavaScript (with `Xrm` and `formContext` for the form), open a URL in a new tab, save the record, or do nothing. Scripts reach the form through `parent.Xrm`.
   - The preview shows the button in a control of the height you choose; clicking it there doesn't run the action.
+
+<img width="754" height="186" alt="crm_button" src="https://github.com/user-attachments/assets/0b5350c6-5563-4a22-af97-aaf66a00023e" />
+
+  
 - **Create custom HTML/CSS...** (Tools tab): write an HTML or CSS web resource by hand.
   - **Web resource** details (top left) work the same way as the banner designer's.
   - **Preview** (top right) updates as you type. HTML is rendered as a page; CSS is applied to a sample page.
@@ -37,6 +41,9 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **Save to Dataverse** creates the web resource (or replaces an existing HTML one after confirming), adds it to the chosen solution and publishes it.
   - **Export HTML...** saves the same HTML file to disk. This works without a connection.
   - The banner fills its frame, so set its height on the form with the web resource's row count, and turn off the label and border.
+ 
+    <img width="616" height="206" alt="crm_banner" src="https://github.com/user-attachments/assets/3ba0ecde-abe9-43b3-96cd-c98ded91cf46" />
+
 
 ## Build
 
