@@ -12,7 +12,7 @@ An XrmToolBox plugin for generating HTML/CSS and Image web resources: build bann
   - **When clicked**: run JavaScript (with `Xrm` and `formContext` for the form), open a URL in a new tab, save the record, or do nothing. Scripts reach the form through `parent.Xrm`.
   - The preview shows the button in a control of the height you choose; clicking it there doesn't run the action.
 
-<img width="754" height="186" alt="crm_button" src="https://github.com/user-attachments/assets/0b5350c6-5563-4a22-af97-aaf66a00023e" />
+    <img width="754" height="186" alt="crm_button" src="https://github.com/user-attachments/assets/0b5350c6-5563-4a22-af97-aaf66a00023e" />
 
   
 - **Create custom HTML/CSS...** (Tools tab): write an HTML or CSS web resource by hand.
